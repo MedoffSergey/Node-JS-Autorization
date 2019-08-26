@@ -1,16 +1,9 @@
-html
-  head
-    title= title
-    script(src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js")
-    script(src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous")  
-    link(rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous")
-      
+include modules/main
+  include modules/header
   body
   .container  
     .row.justify-content-center.text-center
-      
-      .card.col-4.my-5
-        
+      .card.col-4.my-5.box-shadow
         .card-body
           form
             .form-group
@@ -24,12 +17,11 @@ html
            
           button.btn.btn-success.float-right(type='button' onclick = 'loginAsUser()') Вход
           
-  .row.justify-content-center.text-center
-     
-    ul.list-group.text-left.col-2
-      h3 User Data
-      li.list-group-item.list-group-item-action#idLi Id: 
-      li.list-group-item.list-group-item-action#nameLi User name:    
+    .row.justify-content-center.text-center
+      ul.list-group.text-left.col-4
+        h3 User Data
+        li.list-group-item.list-group-item-action#idLi Id: 
+        li.h3.list-group-item.list-group-item-action#nameLi User name:    
     script(src="script.js")
   style
     include style.css

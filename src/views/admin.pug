@@ -1,39 +1,33 @@
-html
-  head
-    title= title
-    script(src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js")
-    script(src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous")  
-    link(rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous")
-      
+include modules/main
   body
   .container  
     .row.justify-content-center.text-center
-    
+      
       h3.my-3 Вы вошли как Администратор    
+      .btn-group.my-2.ml-4(role='group', aria-label='Basic example')
+        button.btn.btn-secondary(type='button',onClick='location.href="http:/"') Перейти на главную
+
+    
       
-    h3.text-center User base
-      
-    table.table.table-bordered
+    table.table.table-bordered.box-shadow
       thead
-        tr.text-center
-          th(scope='col') Id
-          th(scope='col') Name
-          th(scope='col') Login
-          th(scope='col') Password
+        tr.text-center.box-shadow
+          th.box-shadow(scope='col') Id
+          th.box-shadow(scope='col') Name
+          th.box-shadow(scope='col') Login
+          th.box-shadow(scope='col') Password
           
       for val in userList
-      
-          
           tbody
-            tr
-              th(scope='row')= val.id
-              td= val.name
-              td= val.login
-              td= val.password    
+            tr.text-center
+              th.box-shadow(scope='row')= val.id
+              td.box-shadow= val.name
+              td.box-shadow= val.login
+              td.box-shadow= val.password    
               
-    .container  
+    
       .row.justify-content-center.text-center
-        .card.col-4.my-5
+        .card.col-4.my-5.box-shadow
           .card-body
             form
               .form-group
