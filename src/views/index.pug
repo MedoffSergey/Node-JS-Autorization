@@ -1,0 +1,106 @@
+doctype html
+html
+  head
+    title= title
+    
+    script(src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js")
+    script(src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous")  
+    link(rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous")
+    
+  body
+    //ШАПКА СТРАНИЦЫ
+    nav.navbar.navbar-expand-lg.navbar-dark.bg-primary.sticky-top
+      a.navbar-brand(href='/')
+        //- .h2.font-italic Addel
+        img(src="img/logo1.svg" width = "140" height="40")  
+      button.navbar-toggler(type='button' data-toggle='collapse' data-target='#navbarSupportedContent' aria-controls='navbarSupportedContent' aria-expanded='false' aria-label='Toggle navigation')
+        span.navbar-toggler-icon
+    
+      #navbarSupportedContent.collapse.navbar-collapse
+        ul.h5.navbar-nav.mr-auto
+          li.nav-item.active
+            a.nav-link.boder-bottom(data-value='about' href='#') Главная
+          li.nav-item
+            a.nav-link(data-value='blog' href='#') Блог
+          li.nav-item
+            a.nav-link(data-value='team' href='#') О нас
+          li.nav-item
+            a.nav-link(data-value='contact' href='#')| Контакты
+        // Окно поиска
+        form.form-inline
+           input#searchInput.form-control.mr-sm-2(type='search' name="search" placeholder='Поиск' aria-label='Search')
+           
+           button#searchButton.btn.btn-success.my-2.mr-5(type='submit') Искать
+
+           a#loginBtn.btn.btn.btn-success.my-2.mx-5(href="login") Вход
+           
+    .container-fluid      
+      .container
+        .row
+
+                    
+        .files.h3.text-center.my-5 Менеджер пакетов
+        .row
+          .col-lg-4
+            ul.list-group.text-left
+              each val in value
+                li.list-group-item.list-group-item-action(id = val+'a')
+                  span.searchQuery= val
+                  a( id = val  , onclick = 'delete_files("'+val+'"),delete_files("'+val+'a'+'")') 
+                    img.float-right(src="img/cancel.svg" width = "32" height="32")
+              else
+                li.empty Ничего не вижу 
+                
+          .col-lg-4  
+            //Модельное окно
+            .card
+              .card-body
+                form
+                  .form-group
+                    label.col-form-label(for='recipient-name') Домен:
+                    input#recipient-name.form-control(type='text')
+                    label.col-form-label(for='recipient-name') Ip:
+                    input#recipient-ip.form-control(type='text')
+                    //- label.col-form-label(for='recipient-name') Redirect:
+                    //- input.checkbox.cr.ml-2(type='checkbox' width = "15" height = "15")
+                  
+                button.btn.btn-success.float-right(type='button' onclick = 'add_files()') Добавить      
+        
+      
+      
+      
+        //- // Footer
+        //- footer.border-top.mt-5.page-footer.font-small.pt-4.sticky-bottom
+        //-   // Footer s
+        //-   .text-center.text-md-left
+        //-     .row
+        //-         .col-lg-9.ml-5
+        //-           h3 FOOTER
+        //- 
+        //-         ul.list-unstyled.col-lg-2
+        //-           li
+        //-             a(href='#') Главная
+        //-           li
+        //-             a(href='#') Тех.Потдержка
+        //-           li
+        //-             a(href='https://yandex.ru/maps/213/moscow/?ll=37.586752%2C55.799648&mode=search&ol=geo&ouri=ymapsbm1%3A%2F%2Fgeo%3Fll%3D37.613598%252C55.762360%26spn%3D0.007862%252C0.008121%26text%3D%25D0%25A0%25D0%25BE%25D1%2581%25D1%2581%25D0%25B8%25D1%258F%252C%2520%25D0%259C%25D0%25BE%25D1%2581%25D0%25BA%25D0%25B2%25D0%25B0%252C%2520%25D1%2583%25D0%25BB%25D0%25B8%25D1%2586%25D0%25B0%2520%25D0%2591%25D0%25BE%25D0%25BB%25D1%258C%25D1%2588%25D0%25B0%25D1%258F%2520%25D0%2594%25D0%25BC%25D0%25B8%25D1%2582%25D1%2580%25D0%25BE%25D0%25B2%25D0%25BA%25D0%25B0%2520&z=16.55') Показать на карте
+        //-           li
+        //-             a(href='#') Контакты
+
+
+          //- button(class='button btn-lg button--add' data-toggle="modal" data-target="#exampleModal" type="button" onclick='add_files()') Добавить новый файл +
+
+
+
+
+
+
+
+    script(src="script.js")
+  style
+    include style.css
+    
+
+                    
+      
+        
