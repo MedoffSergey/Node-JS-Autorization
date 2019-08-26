@@ -20,17 +20,16 @@ html
               label.col-form-label(for='exampleInputPassword1') Password
               input#inputPassword.form-control(type='password' placeholder='***********')
                 
-            
+          button.btn.btn-primary.float-left(type='button' onclick = 'loginAsAdmin()') Администрирование 
+           
           button.btn.btn-success.float-right(type='button' onclick = 'loginAsUser()') Вход
           
   .row.justify-content-center.text-center
+     
     ul.list-group.text-left.col-2
-      h3 User Data 
-      li.list-group-item.list-group-item-action 
-        h4#idLi Id:
-      li.list-group-item.list-group-item-action 
-        h4#nameLi  User name:  
-          
+      h3 User Data
+      li.list-group-item.list-group-item-action#idLi Id: 
+      li.list-group-item.list-group-item-action#nameLi User name:    
     script(src="script.js")
   style
     include style.css

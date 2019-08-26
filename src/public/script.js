@@ -81,3 +81,40 @@ function loginAsUser(){
   }
 });
 }
+
+
+function loginAsAdmin(){
+  let adminLogin = document.getElementById ('inputLogin').value;
+  let adminPassword = document.getElementById ('inputPassword').value;
+  $.ajax({
+    url: "/admin",   //путь
+    type: "GET",  //Метод отправки
+    data:{        //передается ключ значение после ?
+      login: adminLogin,
+      password: adminPassword
+
+    },
+
+    success: function(userList){
+           window.location.href = 'admin';
+        }
+       });
+     }
+
+function addNewUser(){
+  let newUserName = document.getElementById ('addInputName').value;
+  let newUserLogin = document.getElementById ('addInputLogin').value;
+  let newUserPassword = document.getElementById ('addInputPassword').value;
+  $.ajax({
+    url: "/ajax/admin",   //путь
+    type: "GET",  //Метод отправки
+    data:{        //передается ключ значение после ?
+      name: newUserName,
+      login: newUserLogin,
+      password: newUserPassword
+    },
+    success: function(){
+           window.location.reload();
+        }
+       });
+     }
