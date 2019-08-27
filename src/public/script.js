@@ -2,8 +2,6 @@
 
 
 function delete_files(value) {
-
-  console.log('Из текущей директории был удален файл ' + value);
   let va = document.getElementById(value)
   va.remove();
   $.ajax({
@@ -100,14 +98,7 @@ function loginAsAdmin() {
   });
 }
 
-function authentication(userList, login) {
-    for (let i = 0; i < userList.length; i++) {
-        if (userList[i].login === login) {
-            return userList[i]
-        }
-    }
-    return false
-}
+
 
 function addNewUser() {
   let newUserName = document.getElementById('addInputName').value;
@@ -115,12 +106,41 @@ function addNewUser() {
   let newUserPassword = document.getElementById('addInputPassword').value;
 
   $.ajax({
-    url: "/ajax/admin", //путь
+    url: "/ajax/admin/addNewUser", //путь
     type: "GET", //Метод отправки
     data: { //передается ключ значение после ?
       name: newUserName,
       login: newUserLogin,
       password: newUserPassword
+    },
+    success: function() {
+      window.location.reload();
+    }
+  });
+}
+
+function removeUser(val) {
+
+
+  $.ajax({
+    url: "/ajax/admin/removeUser", //путь
+    type: "GET", //Метод отправки
+    data: { //передается ключ значение после ?
+      login: val,
+    },
+    success: function() {
+      window.location.reload();
+    }
+  });
+}
+
+function sortInt() {
+
+  $.ajax({
+    url: "/ajax/admin/sortInt", //путь
+    type: "GET", //Метод отправки
+    data: { //передается ключ значение после ?
+
     },
     success: function() {
       window.location.reload();

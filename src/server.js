@@ -11,13 +11,17 @@
   app.set('views', path.join(__dirname, 'views'));
   app.set('view engine', 'pug'); // указываем используемый шаблонизатор HTML кода
 
-  const directory = '/home/smedov/Work/Node_js/Test/'; //Указываем путь текущей дериктории
+  const directory = '/home/smedov/Work/Test/'; //Указываем путь текущей дериктории
 
   let userList = [
       { id: 1, name: 'Admin', login: 'Admin', password:"qwe"},
-      { id: 2, name: 'Igor', login: 'Amstel', password:"123"},
-      { id: 3, name: 'Serega', login: 'MRG_Serejka', password:"12345"},
-      { id: 4, name: 'Artur', login: 'ARCHI', password:"qwerty"}
+      { id: 3, name: 'Igor', login: 'Amstel', password:"123"},
+      { id: 5, name: 'Serega', login: 'MRG_Serejka', password:"12345"},
+      { id: 6, name: 'Artur', login: 'ARCHI', password:"qwerty"},
+      { id: 8, name: 'Elsa', login: 'Els@', password:"AdG4Q1q7"},
+      { id: 9, name: 'Sanek', login: 'MRG_Sanek', password:"Sanekkk"},
+      { id: 7, name: 'Serega', login: 'GREY', password:"3145Wqq1"},
+      { id: 12, name: 'Irina', login: 'Beller', password:"qwerty"}
   ];
 
 
@@ -60,9 +64,9 @@
 
 
   app.get('/delete', function(req, res) { //  удаления файла из текущей директории
-    const folder = directory + req.query.id + '.conf';
-    console.log(folder)
-    removeFs.remove(folder, err => {
+    const files = directory + req.query.id + '.conf';
+
+    removeFs.remove(files, err => {
       if (err) console.error(err),
         res.send("Файл " + req.query.id + " был успешно удален");
     })
@@ -82,7 +86,7 @@
     let domenWithoutDots = domain.replace(/\./g, ""); //убираем точку глабально
 
 
-    let fileContent = fs.readFileSync('/home/smedov/Work/Node_js/Test/template.conf', "utf8");
+    let fileContent = fs.readFileSync('/home/smedov/Work/Test/template.conf', "utf8");
     var newStr = fileContent.replace(/__DOMAINWITHOUTDOT__/g, domenWithoutDots).replace(/__DOMAIN__/g, domain).replace(/__IP_ADDRESS__/g, ip);
 
     //записываем в файл домен и ip
@@ -104,8 +108,6 @@
   function check(userLogin) {
     for (let i = 0; i < userList.length; i++) {
       if (userList[i].login === userLogin) {
-
-        console.log(userList[i]);
         return userList[i];
       }
     }
@@ -143,31 +145,55 @@
     });
   });
 
-  app.get('/ajax/admin', function(req, res) { //авторизация под админа
+  app.get('/ajax/admin/addNewUser', function(req, res) { //авторизация под админа
     let newUserLogin = req.query.login;
     let newUserName = req.query.name;
     let newUserPassword = req.query.password;
 
-    let resultAunth = authentication(userList,newUserLogin)
-    if (resultAunth == false){
     let user = {
       id: userList.length + 1,
       login: newUserLogin,
       name: newUserName,
       password: newUserPassword,
+      }
 
-    }
-    else {
-      alert("Логин занят")
-    }
-
-  }
     userList.push(user)
     res.send("200");
   });
 
 
+  function authentication(userList, login) {
+      for (let i = 0; i < userList.length; i++) {
+          if (userList[i].login === login) {
+              return userList[i].id
+          }
+      }
+      return false
+  }
 
+  app.get('/ajax/admin/removeUser', function(req, res) { //авторизация под админа
+      let removeUserLogin = req.query.login;
+      let removeResult= authentication(userList,removeUserLogin)
+
+      userList.splice(removeResult-1,1);
+    res.send("200");
+  });
+
+
+  const sortTable = function(index){
+    const tbody = table.querySelector('tbody');
+
+    const compare = function(rowA,rowB){
+      return rowA.cells[index].innerHTML - rowB.cells[index].innerHTML
+    }
+  }
+
+
+  app.get('/ajax/admin/sortInt',function(req, res) { //авторизация под админа
+
+    
+    res.send("200");
+  });
 
   //запускаем сервер
   app.listen(3000, function() {
