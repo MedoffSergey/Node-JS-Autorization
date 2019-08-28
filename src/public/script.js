@@ -119,31 +119,33 @@ function addNewUser() {
   });
 }
 
-function removeUser(val) {
-
-
+function removeUser(userLogin) {
   $.ajax({
     url: "/ajax/admin/removeUser", //путь
     type: "GET", //Метод отправки
     data: { //передается ключ значение после ?
-      login: val,
+      login: userLogin
     },
     success: function() {
       window.location.reload();
     }
   });
 }
+/*
 
-function sortInt() {
-
+$(".sortButton").click(function(event) {  //добавляем класс и нажатие на нее
+  event.preventDefault();
+  const index = $(this).data('index');  //находим что находиться в data-index
+  console.log(index)
   $.ajax({
-    url: "/ajax/admin/sortInt", //путь
+    url: "/sort", //путь
     type: "GET", //Метод отправки
     data: { //передается ключ значение после ?
-
+      sort:index
     },
     success: function() {
       window.location.reload();
     }
   });
-}
+});
+*/

@@ -3,42 +3,42 @@ include modules/main
   body
   .container  
     .row.justify-content-center.text-center
-      
+
       h3.my-3 Вы вошли как Администратор    
 
 
-    
-      
+
+
     table.table.table-bordered
       thead.thead-dark
         tr.text-center
           th(scope='col') Id
-            a( id= "sortId" onclick= 'sortInt()') 
+            a.sortButton( href='/admin?sort=id' data-index='id') 
               img(src="img/sortdown.svg" width = "15" height="15")
           th(scope='col') Name
-            a.ml-1( id= "sortName" onclick= 'sortStr()') 
-              img(src="img/sortdown.svg" width = "15" height="15")
+            a.sortButton.ml-1(href='/admin?sort=name' data-index='name') 
+              img(src="img/sortdown.svg" width = "15" height="15") 
           th(scope='col') Login
-            a.ml-1( id= "sortLogin" onclick= 'sortStr()') 
+            a.sortButton.ml-1(href='/admin?sort=login' data-index='login') 
               img(src="img/sortdown.svg" width = "15" height="15")
           th(scope='col') Password
           th(scope='col') Del
 
-          
+
       for val in userList
-          tbody
-            tr.text-center
-              th(scope='row')= val.id
-              td= val.name
-              td= val.login
-              td= val.password 
-              td= remove    
-                a( id= val.login onclick= 'removeUser(id)') 
-                  img.justify-content-center(src="img/cancel.svg" width = "32" height="32")
-         
-       
+        tbody
+          tr.text-center
+            th(scope='row')= val.id
+            td= val.name
+            td= val.login
+            td= val.password 
+            td= remove    
+              a(id= val.login onclick= 'removeUser(id)') 
+                img.justify-content-center(src="img/cancel.svg" width = "32" height="32")
+
+
     button.m-2.btn.btn-success(type='button' data-toggle='modal' data-target='#exampleModal') Добавить
-    
+
   // Modal
   #exampleModal.modal.fade(tabindex='-1' role='dialog' aria-labelledby='exampleModalLabel' aria-hidden='true')
     .modal-dialog.modal-sm(role='document')
@@ -57,11 +57,10 @@ include modules/main
               label.col-form-label(for='exampleInputPassword') Password
               input#addInputPassword.form-control.form-control-sm(type='text' placeholder='***********')
         .modal-footer
-          
+
           button.btn.btn-success.float-right(type='button' onclick = 'addNewUser()') Добавить  
-          
-              
+
+
     script(src="script.js")
   style
     include style.css
-      

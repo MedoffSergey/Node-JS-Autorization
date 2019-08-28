@@ -14,11 +14,11 @@
   const directory = '/home/smedov/Work/Test/'; //Указываем путь текущей дериктории
 
   let userList = [
-      { id: 1, name: 'Admin', login: 'Admin', password:"qwe"},
-      { id: 3, name: 'Igor', login: 'Amstel', password:"123"},
+      { id: 4, name: 'Admin', login: 'Admin', password:"qwe"},
+      { id: 2, name: 'Igor', login: 'Amstel', password:"123"},
       { id: 5, name: 'Serega', login: 'MRG_Serejka', password:"12345"},
-      { id: 6, name: 'Artur', login: 'ARCHI', password:"qwerty"},
-      { id: 8, name: 'Elsa', login: 'Els@', password:"AdG4Q1q7"},
+      { id: 6, name: 'Artur', login: 'Archi', password:"qwerty"},
+      { id: 33, name: 'Elsa', login: 'Els@', password:"AdG4Q1q7"},
       { id: 9, name: 'Sanek', login: 'MRG_Sanek', password:"Sanekkk"},
       { id: 7, name: 'Serega', login: 'GREY', password:"3145Wqq1"},
       { id: 12, name: 'Irina', login: 'Beller', password:"qwerty"}
@@ -139,11 +139,33 @@
   });
 
   app.get('/admin', function(req, res) {
+    let result = req.query
+    console.log(result)
+    sortTable(result,userList)
     res.render('admin', {
       title: 'Админка',
       userList: userList
     });
   });
+
+
+    function sortTable(index, array) {
+      if (index == 'name' || index == 'login') {
+        array.sort(function(a, b) {
+          if (a[index] > b[index]) return 1;
+          else return 0;
+        })
+      } else {
+          array.sort(function(a, b) {
+            return a[index] - b[index]
+
+          })
+        }
+
+      }
+  //  }
+
+
 
   app.get('/ajax/admin/addNewUser', function(req, res) { //авторизация под админа
     let newUserLogin = req.query.login;
@@ -173,27 +195,18 @@
 
   app.get('/ajax/admin/removeUser', function(req, res) { //авторизация под админа
       let removeUserLogin = req.query.login;
+      console.log(removeUserLogin)
       let removeResult= authentication(userList,removeUserLogin)
+      console.log(removeResult)
 
       userList.splice(removeResult-1,1);
     res.send("200");
   });
 
 
-  const sortTable = function(index){
-    const tbody = table.querySelector('tbody');
-
-    const compare = function(rowA,rowB){
-      return rowA.cells[index].innerHTML - rowB.cells[index].innerHTML
-    }
-  }
 
 
-  app.get('/ajax/admin/sortInt',function(req, res) { //авторизация под админа
 
-    
-    res.send("200");
-  });
 
   //запускаем сервер
   app.listen(3000, function() {
