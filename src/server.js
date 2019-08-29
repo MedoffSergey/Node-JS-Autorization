@@ -5,6 +5,7 @@
   const pug = require('pug');
   const url = require('url')
   const removeFs = require('fs-extra')
+
   //init app
   const app = express();
 
@@ -139,9 +140,10 @@
   });
 
   app.get('/admin', function(req, res) {
-    let result = req.query
-    console.log(result)
-    sortTable(result,userList)
+    let result = req.query.sort
+    let sortMethod = req.query.direction
+    console.log(sortMethod)
+    sortTable(result,userList,sortMethod)
     res.render('admin', {
       title: 'Админка',
       userList: userList
@@ -149,21 +151,22 @@
   });
 
 
-    function sortTable(index, array) {
-      if (index == 'name' || index == 'login') {
+    function sortTable(index, array, method) {
+      if (method == "down") {
         array.sort(function(a, b) {
           if (a[index] > b[index]) return 1;
+          else if (a[index] < b[index]) return -1;
           else return 0;
         })
       } else {
-          array.sort(function(a, b) {
-            return a[index] - b[index]
-
-          })
-        }
-
+        array.sort(function(a, b) {
+          if (a[index] < b[index]) return 1;
+          else if (a[index] > b[index]) return -1;
+          else return 0;
+        })
       }
-  //  }
+    }
+
 
 
 

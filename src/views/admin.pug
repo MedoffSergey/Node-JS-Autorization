@@ -5,22 +5,28 @@ include modules/main
     .row.justify-content-center.text-center
 
       h3.my-3 Вы вошли как Администратор    
-
-
+      div#vue {{message}}
+      
 
 
     table.table.table-bordered
       thead.thead-dark
         tr.text-center
           th(scope='col') Id
-            a.sortButton( href='/admin?sort=id' data-index='id') 
-              img(src="img/sortdown.svg" width = "15" height="15")
+            a.ml-1( href='/admin?sort=id&direction=down' ) 
+              img( src="img/sortdown.svg" width = "15" height="15")
+            a( href='/admin?sort=id&direction=up' ) 
+              img( src="img/sortup.svg" width = "15" height="15")    
           th(scope='col') Name
-            a.sortButton.ml-1(href='/admin?sort=name' data-index='name') 
+            a.ml-1(href='/admin?sort=name&direction=down' ) 
               img(src="img/sortdown.svg" width = "15" height="15") 
+            a( href='/admin?sort=name&direction=up' ) 
+              img( src="img/sortup.svg" width = "15" height="15")  
           th(scope='col') Login
-            a.sortButton.ml-1(href='/admin?sort=login' data-index='login') 
+            a.ml-1(href='/admin?sort=login&direction=down') 
               img(src="img/sortdown.svg" width = "15" height="15")
+            a( href='/admin?sort=login&direction=up' ) 
+              img( src="img/sortup.svg" width = "15" height="15") 
           th(scope='col') Password
           th(scope='col') Del
 

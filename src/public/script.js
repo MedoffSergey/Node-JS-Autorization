@@ -131,21 +131,12 @@ function removeUser(userLogin) {
     }
   });
 }
-/*
 
-$(".sortButton").click(function(event) {  //добавляем класс и нажатие на нее
-  event.preventDefault();
-  const index = $(this).data('index');  //находим что находиться в data-index
-  console.log(index)
-  $.ajax({
-    url: "/sort", //путь
-    type: "GET", //Метод отправки
-    data: { //передается ключ значение после ?
-      sort:index
-    },
-    success: function() {
-      window.location.reload();
-    }
-  });
-});
-*/
+
+
+new Vue({
+  el: '#vue',
+  data: {
+    message: "Hello мир"
+  }
+})
