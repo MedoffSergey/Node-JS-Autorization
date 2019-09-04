@@ -3,9 +3,9 @@
   const fs = require('fs');
   const path = require('path');
   const pug = require('pug');
-  const url = require('url')
-  const removeFs = require('fs-extra')
-
+  const url = require('url');
+  const removeFs = require('fs-extra');
+  var cors = require('cors');
   //init app
   const app = express();
 
@@ -15,19 +15,19 @@
   const directory = '/home/smedov/Work/Test/'; //Указываем путь текущей дериктории
 
   let userList = [
-      { id: 4, name: 'Admin', login: 'Admin', password:"qwe"},
+      { id: 1, name: 'Admin', login: 'Admin', password:"qwe"},
       { id: 2, name: 'Igor', login: 'Amstel', password:"123"},
-      { id: 5, name: 'Serega', login: 'MRG_Serejka', password:"12345"},
-      { id: 6, name: 'Artur', login: 'Archi', password:"qwerty"},
-      { id: 33, name: 'Elsa', login: 'Els@', password:"AdG4Q1q7"},
-      { id: 9, name: 'Sanek', login: 'MRG_Sanek', password:"Sanekkk"},
+      { id: 3, name: 'Serega', login: 'MRG_Serejka', password:"12345"},
+      { id: 4, name: 'Artur', login: 'Archi', password:"qwerty"},
+      { id: 5, name: 'Elsa', login: 'Els@', password:"AdG4Q1q7"},
+      { id: 6, name: 'Sanek', login: 'MRG_Sanek', password:"Sanekkk"},
       { id: 7, name: 'Serega', login: 'GREY', password:"3145Wqq1"},
-      { id: 12, name: 'Irina', login: 'Beller', password:"qwerty"}
+      { id: 8, name: 'Irina', login: 'Beller', password:"qwerty"}
   ];
 
 
   app.use(express.static(path.join(__dirname, 'public'))); //добовляет файлы которые на компьютере для загрузки если они имеются
-
+  app.use(cors());
   //Главная страница
   app.get('/', function(req, res) { //Главная страница
     const files = fs.readdirSync(directory); //Прочитываем файлы из текущей директории
@@ -95,7 +95,7 @@
       if (error) throw error; //Использую инструкцию throw для генерирования исключения
 
 
-      res.send("200"); //выведем 200ок
+      res.send("200 OK"); //выведем 200ок
 
     });
   });
@@ -142,7 +142,7 @@
   app.get('/admin', function(req, res) {
     let result = req.query.sort
     let sortMethod = req.query.direction
-    console.log(sortMethod)
+
     sortTable(result,userList,sortMethod)
     res.render('admin', {
       title: 'Админка',
@@ -183,11 +183,11 @@
       }
 
     userList.push(user)
-    res.send("200");
+    res.send("200 OK");
   });
 
 
-  function authentication(userList, login) {
+  function authenticationLogin(userList, login) {
       for (let i = 0; i < userList.length; i++) {
           if (userList[i].login === login) {
               return userList[i].id
@@ -198,16 +198,59 @@
 
   app.get('/ajax/admin/removeUser', function(req, res) { //авторизация под админа
       let removeUserLogin = req.query.login;
-      console.log(removeUserLogin)
-      let removeResult= authentication(userList,removeUserLogin)
+      let removeResult= authenticationLogin(userList,removeUserLogin)
       console.log(removeResult)
 
       userList.splice(removeResult-1,1);
-    res.send("200");
+    res.send("200 OK");
   });
 
 
 
+  app.get('/ajax/users', function(req, res) {
+    res.json(userList)        //рендерим массив пользователей
+  });
+
+  function authenticationId(userList, id) {
+      for (let i = 0; i < userList.length; i++) {
+          if (userList[i].id == id) {
+              return userList[i]
+          }
+      }
+      return false
+  }
+
+  app.get('/ajax/users/delete', function(req, res) {
+    let uniqueUserId = Number(req.query.id) //Id пользователя
+    let resultRemoveUser = authenticationId(userList,uniqueUserId)  //функция аунтификации по id
+
+    if (Boolean(resultRemoveUser)) {
+        let userIndexReal=userList.indexOf(resultRemoveUser);
+        userList.splice(userIndexReal , 1);
+        res.json(userList)
+      }else{
+      console.log("Нет такого пользователя!")
+      res.json(userList);
+    }
+  });
+
+
+  app.get('/ajax/users/add', function(req, res) {
+    let userName = req.query.name //name пользователя
+    let userLogin = req.query.login //name пользователя
+    let userPassword = req.query.password //name пользователя
+
+      let user = {
+        id: userList.length + 1,
+        name: userName,
+        login: userLogin,
+        password: userPassword
+        }
+
+      userList.push(user)
+
+    res.json(userList);
+    });
 
 
 

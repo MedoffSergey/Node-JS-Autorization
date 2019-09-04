@@ -131,12 +131,3 @@ function removeUser(userLogin) {
     }
   });
 }
-
-
-
-new Vue({
-  el: '#vue',
-  data: {
-    message: "Hello мир"
-  }
-})

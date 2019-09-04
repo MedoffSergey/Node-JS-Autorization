@@ -5,10 +5,10 @@ include modules/main
     .row.justify-content-center.text-center
 
       h3.my-3 Вы вошли как Администратор    
-      div#vue {{message}}
-      
-
-
+    a(href="/ajax/users") 
+      img.mb-2.justify-content-center( src="img/userList.svg" width = "45" height="45") 
+      span.mt-2.text-success Получить список пользователей
+    
     table.table.table-bordered
       thead.thead-dark
         tr.text-center
