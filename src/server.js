@@ -19,7 +19,7 @@
   app.use(bodyParser.json())
 
 
-  const directory = '/home/smedov/Work/Test/'; //Указываем путь текущей дериктории
+  const directory = '/home/smedov/Work/Node_js/Test/'; //Указываем путь текущей дериктории
 
   let userList = [
       { id: 1, name: 'Admin', login: 'Admin', password:"qwe"},
@@ -84,7 +84,7 @@ app.get('/add', function(req, res) { //добавление
 
   let domenWithoutDots = domain.replace(/\./g, "");   //убираем точку глабально используя регулярные выражения
 
-  let fileContent = fs.readFileSync('/home/smedov/Work/Test/template.conf', "utf8");  //считываем то что находиться в файле
+  let fileContent = fs.readFileSync('/home/smedov/Work/Node_js/Test/template.conf', "utf8");  //считываем то что находиться в файле
   var newStr = fileContent.replace(/__DOMAINWITHOUTDOT__/g, domenWithoutDots).replace(/__DOMAIN__/g, domain).replace(/__IP_ADDRESS__/g, ip);  //заменяем контекст в файле
 
   //записываем в файл домен и ip
@@ -95,7 +95,7 @@ app.get('/add', function(req, res) { //добавление
   });
 });
 
-app.get('/login', function(req, res) { //авторизация
+app.get('/login', function(req, res) { //рендерим новую страницуавторизация
   res.render('login', {
     title: 'Вход'
   });
@@ -147,20 +147,16 @@ app.get('/admin', function(req, res) {
 
 
 
-function sortTable(index, array, method) {
-  if (method == "down") {
+function sortTable(index, array, method) { //Cортировка пользователей по колонкам
+  return userList.slice().sort(function(a, b) {
+  let modifier = -1
+  if (method == "up") modifier = 1
     array.sort(function(a, b) {
-      if (a[index] > b[index]) return 1;
-      else if (a[index] < b[index]) return -1;
+      if (a[index] > b[index]) return 1*modifier;
+      else if (a[index] < b[index]) return -1*modifier;
       else return 0;
     })
-  } else {
-    array.sort(function(a, b) {
-      if (a[index] < b[index]) return 1;
-      else if (a[index] > b[index]) return -1;
-      else return 0;
     })
-  }
 }
 
 
@@ -184,7 +180,7 @@ app.get('/ajax/admin/addNewUser', function(req, res) { //авторизация 
 
 
 
-function authenticationLogin(userList, login) {
+function loginСomparison(userList, login) {
   for (let i = 0; i < userList.length; i++) {
     if (userList[i].login === login) {
       return userList[i].id
@@ -195,7 +191,7 @@ function authenticationLogin(userList, login) {
 
 app.get('/ajax/admin/removeUser', function(req, res) { //авторизация под админа
   let removeUserLogin = req.query.login;
-  let removeResult = authenticationLogin(userList, removeUserLogin)
+  let removeResult = loginСomparison(userList, removeUserLogin)
 
   userList.splice(removeResult - 1, 1);
   res.send("200 OK");
@@ -209,7 +205,7 @@ app.get('/ajax/users', function(req, res) {
 
 
 
-function authenticationId(userList, id) {
+function searchById(userList, id) {
   for (let i = 0; i < userList.length; i++) {
     if (userList[i].id == id) {
       return userList[i]
@@ -220,18 +216,18 @@ function authenticationId(userList, id) {
 
 app.get('/ajax/users/delete', function(req, res) {
   let uniqueUserId = Number(req.query.id) //Id пользователя
-  let resultRemoveUser = authenticationId(userList, uniqueUserId) //функция аунтификации по id
+  let resultRemoveUser = searchById(userList, uniqueUserId) //функция аунтификации по id
 
   if (Boolean(resultRemoveUser)) {
-    let userIndexReal = userList.indexOf(resultRemoveUser);
+    let userIndexReal = userList.indexOf(resultRemoveUser);// нужно доделать функцию удаления__________________________
     userList.splice(userIndexReal, 1);
     res.json(userList)
   } else {
     console.log("Нет такого пользователя!")
 
     res.json(userList);
-  }
-});
+      }
+    })
 
 
 
@@ -245,14 +241,13 @@ function LoginVerification(userList, login) {
 }
 
 app.post('/ajax/users/add', function(req, res) {
-  console.log(req.body);
 
   let userName = req.body.name; //name пользователя
   let userLogin = req.body.login; //name пользователя
   let userPassword = req.body.password; //name пользователя
 
   let user = {
-    id: ++lengthArray,
+    id: userList.length+1,   //?нужно сделать чтоб ид был не повторяющимся________________________
     name: userName,
     login: userLogin,
     password: userPassword
@@ -264,7 +259,7 @@ app.post('/ajax/users/add', function(req, res) {
   }
   else {
     console.log("Такой пользователь уже существует")
-    --lengthArray;
+    //--lengthArray;
   }
 });
 
