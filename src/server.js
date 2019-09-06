@@ -7,6 +7,7 @@
   const removeFs = require('fs-extra');
   const cors = require('cors');
   const bodyParser = require('body-parser');
+  const createError = require('http-errors')
 
   //init app
   const app = express();
@@ -38,192 +39,52 @@ app.use(express.static(path.join(__dirname, 'public'))); //добовляет ф
 app.use(cors());
 
 
-
-app.get('/', function(req, res) { //Главная страница
-  const files = fs.readdirSync(directory); //Прочитываем файлы из текущей директории
-
-  for (let i = 0; i < files.length; i++) //убираем расширение
-  {
-    let name = path.basename(files[i], '.conf');
-    files[i] = name;
-  }
-
-  let searchResult = req.query.search; //присваиваем переменной результат запроса клиента
-
-  const filterItems = (searchResult) => { //фильтр Поискового окна
-    return files.filter((el) =>
-      el.indexOf(searchResult) > -1
-    );
-  }
-
-  let filterList = filterItems(searchResult); //присваиваем отфильтрованные переменные в одну переменную
-
-  if (filterList != '') {
-    res.render('index', { title: 'Directory', value: filterList });
-  } else
-    res.render('index', { title: 'Directory', value: files }); //рендерим файл index.pug
-});
+    // ФУНКЦИИ Вспомогательные
 
 
-
-app.get('/delete', function(req, res) { //  удаления файла из текущей директории
-  const files = directory + req.query.id + '.conf';
-
-  removeFs.remove(files, err => {   //воспользуемся модулем fs-extra для удаления файла
-    if (err) console.error(err),
-      res.send("Файл " + req.query.id + " был успешно удален");
-  })
-});
-
-
-
-app.get('/add', function(req, res) { //добавление
-  let domain = req.query.domain;
-  let fileName = directory + domain + '.conf'
-  let ip = req.query.ip;
-
-  let domenWithoutDots = domain.replace(/\./g, "");   //убираем точку глабально используя регулярные выражения
-
-  let fileContent = fs.readFileSync('/home/smedov/Work/Test/template.conf', "utf8");  //считываем то что находиться в файле
-  var newStr = fileContent.replace(/__DOMAINWITHOUTDOT__/g, domenWithoutDots).replace(/__DOMAIN__/g, domain).replace(/__IP_ADDRESS__/g, ip);  //заменяем контекст в файле
-
-  //записываем в файл домен и ip
-  fs.writeFile(fileName, newStr, function(error) {
-    if (error) throw error; //Использую инструкцию throw для генерирования исключения
-    res.send("200 OK"); //выведем 200ок
-
-  });
-});
-
-app.get('/login', function(req, res) { //рендерим новую страницуавторизация
-  res.render('login', {
-    title: 'Вход'
-  });
-});
-
-
-
-function check(userLogin) {
-  for (let i = 0; i < userList.length; i++) {
-    if (userList[i].login === userLogin) {
-      return userList[i];
+    function searchById(userList, id) {
+      for (let i = 0; i < userList.length; i++) {
+        if (userList[i].id == id) {
+          return userList[i]
+        }
+      }
+      return false
     }
-  }
-  return false;
-}
 
 
-
-app.get('/getLogin', function(req, res) { //авторизация
-  let login = req.query.login
-  let password = req.query.password
-  const uniqueUser = check(login)
-
-  if (password === uniqueUser.password) {
-    const out = {
-      status: 1,
-      token: 'supertoken-3213123123',
-      str: req.query.login + '--' + req.query.password,
-      name: req.query.login,
-      user: uniqueUser.id
+    function loginСomparison(userList, login) {
+      for (let i = 0; i < userList.length; i++) {
+        if (userList[i].login === login) {
+          return userList[i]
+        }
+      }
+      return false
     }
-    res.json(out) //отправляю json формат на клиент
-  } else {
-    res.json({
-      status: 0
-    })
-  }
-});
 
 
-
-app.get('/admin', function(req, res) {
-  let result = req.query.sort
-  let sortMethod = req.query.direction
-
-  sortTable(result, userList, sortMethod)
-  res.render('admin', { title: 'Админка', userList: userList });
-});
-
-
-
-function sortTable(index, array, method) { //Cортировка пользователей по колонкам
-  return userList.slice().sort(function(a, b) {
-  let modifier = -1
-  if (method == "up") modifier = 1
-    array.sort(function(a, b) {
-      if (a[index] > b[index]) return 1*modifier;
-      else if (a[index] < b[index]) return -1*modifier;
-      else return 0;
-    })
-    })
-}
-
-
-
-app.get('/ajax/admin/addNewUser', function(req, res) { //Добавление пользователей на стороне клиента
-  let newUserLogin = req.query.login;
-  let newUserName = req.query.name;
-  let newUserPassword = req.query.password;
-
-  let user = {
-    id: ++lengthArray,
-    login: newUserLogin,
-    name: newUserName,
-    password: newUserPassword,
-  }
-
-  userList.push(user)
-
-  res.send("200 OK");
-});
-
-
-
-function loginСomparison(userList, login) {
-  for (let i = 0; i < userList.length; i++) {
-    if (userList[i].login === login) {
-      return userList[i]
+    function sortTable(index, array, method) { // Cортировка пользователей по колонкам
+      return userList.slice().sort(function(a, b) {
+      let modifier = -1
+      if (method == "up") modifier = 1
+        array.sort(function(a, b) {
+          if (a[index] > b[index]) return 1*modifier;
+          else if (a[index] < b[index]) return -1*modifier;
+          else return 0;
+        })
+        })
     }
-  }
-  return false
-}
 
-app.get('/ajax/admin/removeUser', function(req, res) { //авторизация под админа
-  let removeUserLogin = req.query.login;
-  let removeResult = loginСomparison(userList, removeUserLogin)
-
-  if (Boolean(removeResult)) {
-    let userIndexReal = userList.indexOf(removeResult);
-    userList.splice(userIndexReal, 1);
-    res.json(userList)
-  } else {
-    console.log("Нет такого пользователя!")
-    res.send("200 OK");
-  }
-
-});
 
 
 
 app.get('/ajax/users', function(req, res) {
-  res.json(userList) //рендерим массив пользователей
+  res.json(userList) // рендерим массив пользователей
 });
 
 
-
-function searchById(userList, id) {
-  for (let i = 0; i < userList.length; i++) {
-    if (userList[i].id == id) {
-      return userList[i]
-    }
-  }
-  return false
-}
-
-app.get('/ajax/users/delete', function(req, res) {    //удаление пользователей на стороне клиента
-  let uniqueUserId = Number(req.query.id) //Id пользователя
-  let resultRemoveUser = searchById(userList, uniqueUserId) //функция аунтификации по id
+app.post('/ajax/users/delete', function(req, res) {    // удаление пользователей на стороне клиента
+  let uniqueUserId = Number(req.query.id) // Id пользователя
+  let resultRemoveUser = searchById(userList, uniqueUserId) // функция аунтификации по id
 
   if (Boolean(resultRemoveUser)) {
     let userIndexReal = userList.indexOf(resultRemoveUser);
@@ -238,15 +99,6 @@ app.get('/ajax/users/delete', function(req, res) {    //удаление пол�
 
 
 
-function LoginVerification(userList, login) {
-  for (let i = 0; i < userList.length; i++) {
-    if (userList[i].login === login) {
-      return userList[i]
-    }
-  }
-  return false
-}
-
 app.post('/ajax/users/add', function(req, res) {
 
   let userName = req.body.name; //name пользователя
@@ -255,22 +107,40 @@ app.post('/ajax/users/add', function(req, res) {
 
   // ??????????????????????????????????????????
   let user = {
-    id: ++lengthArray,   //?нужно сделать чтоб ид был не повторяющимся________________________
+    id: ++lengthArray,
     name: userName,
     login: userLogin,
     password: userPassword
   }
 
-  if (LoginVerification(userList,userLogin) == false && userName!='' && userLogin!='' && userPassword!=''){
+  if (loginСomparison(userList,userLogin) == false && userName!='' && userLogin!='' && userPassword!=''){
     userList.push(user)
     res.json(userList);
   }
   else {
+    --lengthArray;
     console.log("Такой пользователь уже существует")
     //--lengthArray;
     // ??????????????????????????????????????????
   }
 });
+
+
+    //ОТЛАВЛИВАЕМ ОШИБКИ ЗДЕСЬ
+    //Используется модуль http-errors
+
+app.use(function(req, res, next) {
+    return next(createError(404, 'Api метод не существует'))
+})
+
+app.use(function(err, req, res, next) {
+    res.status(err.statusCode)
+    res.json({
+        success: 0,
+        error:err,
+        message: err.message
+    })
+})
 
 
 //запускаем сервер
