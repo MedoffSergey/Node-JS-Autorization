@@ -19,7 +19,7 @@
   app.use(bodyParser.json())
 
 
-  const directory = '/home/smedov/Work/Node_js/Test/'; //Указываем путь текущей дериктории
+  const directory = '/home/smedov/Work/Test/'; //Указываем путь текущей дериктории
 
   let userList = [
       { id: 1, name: 'Admin', login: 'Admin', password:"qwe"},
@@ -84,7 +84,7 @@ app.get('/add', function(req, res) { //добавление
 
   let domenWithoutDots = domain.replace(/\./g, "");   //убираем точку глабально используя регулярные выражения
 
-  let fileContent = fs.readFileSync('/home/smedov/Work/Node_js/Test/template.conf', "utf8");  //считываем то что находиться в файле
+  let fileContent = fs.readFileSync('/home/smedov/Work/Test/template.conf', "utf8");  //считываем то что находиться в файле
   var newStr = fileContent.replace(/__DOMAINWITHOUTDOT__/g, domenWithoutDots).replace(/__DOMAIN__/g, domain).replace(/__IP_ADDRESS__/g, ip);  //заменяем контекст в файле
 
   //записываем в файл домен и ip
@@ -161,13 +161,13 @@ function sortTable(index, array, method) { //Cортировка пользов�
 
 
 
-app.get('/ajax/admin/addNewUser', function(req, res) { //авторизация под админа
+app.get('/ajax/admin/addNewUser', function(req, res) { //Добавление пользователей на стороне клиента
   let newUserLogin = req.query.login;
   let newUserName = req.query.name;
   let newUserPassword = req.query.password;
 
   let user = {
-    id: userList.length + 1,
+    id: ++lengthArray,
     login: newUserLogin,
     name: newUserName,
     password: newUserPassword,
@@ -183,7 +183,7 @@ app.get('/ajax/admin/addNewUser', function(req, res) { //авторизация 
 function loginСomparison(userList, login) {
   for (let i = 0; i < userList.length; i++) {
     if (userList[i].login === login) {
-      return userList[i].id
+      return userList[i]
     }
   }
   return false
@@ -193,8 +193,15 @@ app.get('/ajax/admin/removeUser', function(req, res) { //авторизация 
   let removeUserLogin = req.query.login;
   let removeResult = loginСomparison(userList, removeUserLogin)
 
-  userList.splice(removeResult - 1, 1);
-  res.send("200 OK");
+  if (Boolean(removeResult)) {
+    let userIndexReal = userList.indexOf(removeResult);
+    userList.splice(userIndexReal, 1);
+    res.json(userList)
+  } else {
+    console.log("Нет такого пользователя!")
+    res.send("200 OK");
+  }
+
 });
 
 
@@ -214,20 +221,20 @@ function searchById(userList, id) {
   return false
 }
 
-app.get('/ajax/users/delete', function(req, res) {
+app.get('/ajax/users/delete', function(req, res) {    //удаление пользователей на стороне клиента
   let uniqueUserId = Number(req.query.id) //Id пользователя
   let resultRemoveUser = searchById(userList, uniqueUserId) //функция аунтификации по id
 
   if (Boolean(resultRemoveUser)) {
-    let userIndexReal = userList.indexOf(resultRemoveUser);// нужно доделать функцию удаления__________________________
+    let userIndexReal = userList.indexOf(resultRemoveUser);
     userList.splice(userIndexReal, 1);
     res.json(userList)
   } else {
     console.log("Нет такого пользователя!")
 
     res.json(userList);
-      }
-    })
+  }
+})
 
 
 
@@ -246,8 +253,9 @@ app.post('/ajax/users/add', function(req, res) {
   let userLogin = req.body.login; //name пользователя
   let userPassword = req.body.password; //name пользователя
 
+  // ??????????????????????????????????????????
   let user = {
-    id: userList.length+1,   //?нужно сделать чтоб ид был не повторяющимся________________________
+    id: ++lengthArray,   //?нужно сделать чтоб ид был не повторяющимся________________________
     name: userName,
     login: userLogin,
     password: userPassword
@@ -260,6 +268,7 @@ app.post('/ajax/users/add', function(req, res) {
   else {
     console.log("Такой пользователь уже существует")
     //--lengthArray;
+    // ??????????????????????????????????????????
   }
 });
 
