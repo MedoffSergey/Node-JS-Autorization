@@ -42,25 +42,33 @@ app.use(cors());
     // ФУНКЦИИ Вспомогательные
 
 
-    function searchById(userList, id) {
+    function searchById (userList, id) {
       for (let i = 0; i < userList.length; i++) {
         if (userList[i].id == id) {
           return userList[i]
         }
       }
       return false
-    }
+    };
 
 
-    function loginСomparison(userList, login) {
+    function loginСomparison (userList, login) {
       for (let i = 0; i < userList.length; i++) {
         if (userList[i].login === login) {
           return userList[i]
         }
       }
       return false
-    }
+    };
 
+    function passwordСheck (userList, password) {
+      for (let i = 0; i < userList.length; i++) {
+        if (userList[i].password === password) {
+          return userList[i]
+        }
+      }
+      return false
+    };
 
     function sortTable(index, array, method) { // Cортировка пользователей по колонкам
       return userList.slice().sort(function(a, b) {
@@ -82,9 +90,10 @@ app.get('/ajax/users', function(req, res) {
 });
 
 
-app.post('/ajax/users/delete', function(req, res) {    // удаление пользователей на стороне клиента
-  let uniqueUserId = Number(req.query.id) // Id пользователя
+app.post('/ajax/users/delete', function(req, res,next) {    // удаление пользователей на стороне клиента
+  let uniqueUserId = Number(req.body.id) // Id пользователя
   let resultRemoveUser = searchById(userList, uniqueUserId) // функция аунтификации по id
+
 
   if (Boolean(resultRemoveUser)) {
     let userIndexReal = userList.indexOf(resultRemoveUser);
@@ -92,7 +101,6 @@ app.post('/ajax/users/delete', function(req, res) {    // удаление по�
     res.json(userList)
   } else {
     console.log("Нет такого пользователя!")
-
     res.json(userList);
   }
 })
@@ -120,12 +128,19 @@ app.post('/ajax/users/add', function(req, res) {
   else {
     --lengthArray;
     console.log("Такой пользователь уже существует")
-    //--lengthArray;
     // ??????????????????????????????????????????
   }
 });
 
+app.post('/ajax/users/dataСhecking', function(req, res) {
+  let userLogin = req.body.login; //name пользователя
+  let userPassword = req.body.password; //name пользователя
 
+  if(loginСomparison(userList,userLogin)&&passwordСheck(userList,userPassword)==true){
+    console.log(1)
+  }else console.log(2)
+
+})
     //ОТЛАВЛИВАЕМ ОШИБКИ ЗДЕСЬ
     //Используется модуль http-errors
 
