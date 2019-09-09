@@ -8,7 +8,7 @@
   const cors = require('cors');
   const bodyParser = require('body-parser');
   const createError = require('http-errors')
-
+  const jwt = require('jsonwebtoken');
   //init app
   const app = express();
 
@@ -18,6 +18,8 @@
   app.use(bodyParser.urlencoded({ extended: false }))
   // parse application/json
   app.use(bodyParser.json())
+
+  const MY_SECRET = "cAtwa1kkEy"
 
 
   const directory = '/home/smedov/Work/Test/'; //Указываем путь текущей дериктории
@@ -100,18 +102,17 @@ app.post('/ajax/users/delete', function(req, res,next) {    // удаление 
     userList.splice(userIndexReal, 1);
     res.json(userList)
   } else {
-    console.log("Нет такого пользователя!")
-    res.json(userList);
+    console.log('Данного пользователя не cуществует')
   }
 })
 
 
 
-app.post('/ajax/users/add', function(req, res) {
+app.post('/ajax/users/add', function(req, res, next) {
 
   let userName = req.body.name; //name пользователя
-  let userLogin = req.body.login; //name пользователя
-  let userPassword = req.body.password; //name пользователя
+  let userLogin = req.body.login; //login пользователя
+  let userPassword = req.body.password; //password пользователя
 
   // ??????????????????????????????????????????
   let user = {
@@ -127,34 +128,45 @@ app.post('/ajax/users/add', function(req, res) {
   }
   else {
     --lengthArray;
-    console.log("Такой пользователь уже существует")
-    // ??????????????????????????????????????????
+    return next(createError(400, 'Пользователя не существует'))
   }
 });
 
-app.post('/ajax/users/dataСhecking', function(req, res) {
-  let userLogin = req.body.login; //name пользователя
-  let userPassword = req.body.password; //name пользователя
+app.post('/ajax/users/dataChecking', function(req, res,next) {
+      let userLogin = req.body.login; //name пользователя
+      let userPassword = req.body.password; //name пользователя
 
-  if(loginСomparison(userList,userLogin)&&passwordСheck(userList,userPassword)==true){
-    console.log(1)
-  }else console.log(2)
+      if (loginСomparison(userList, userLogin) && passwordСheck(userList, userPassword)) {
+        let user = loginСomparison(userList, userLogin)
+        var token = jwt.sign({ name: user.id, login: user.login }, MY_SECRET);
 
-})
+        res.json({
+          token:token,
+          userId: user.id,
+          userName: user.name,
+          userLogin: user.login
+
+        })
+      }
+    
+    })
+
+
+
     //ОТЛАВЛИВАЕМ ОШИБКИ ЗДЕСЬ
     //Используется модуль http-errors
 
 app.use(function(req, res, next) {
-    return next(createError(404, 'Api метод не существует'))
+  return next(createError(404, 'Api метод не существует'))
 })
 
 app.use(function(err, req, res, next) {
-    res.status(err.statusCode)
-    res.json({
-        success: 0,
-        error:err,
-        message: err.message
-    })
+  res.status(err.statusCode)
+  res.json({
+    success: 0,
+    error: err,
+    message: err.message
+  })
 })
 
 
