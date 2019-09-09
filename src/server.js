@@ -1,14 +1,12 @@
   //Подключение модулей
   const express = require('express');
-  const fs = require('fs');
   const path = require('path');
   const pug = require('pug');
-  const url = require('url');
-  const removeFs = require('fs-extra');
-  const cors = require('cors');
+  const cors = require('cors'); //модуль для axios
   const bodyParser = require('body-parser');
   const createError = require('http-errors')
   const jwt = require('jsonwebtoken');
+
   //init app
   const app = express();
 
@@ -16,13 +14,11 @@
   app.set('view engine', 'pug'); // указываем используемый шаблонизатор HTML кода
 
   app.use(bodyParser.urlencoded({ extended: false }))
-  // parse application/json
   app.use(bodyParser.json())
+  app.use(cors());
+  app.use(express.static(path.join(__dirname, 'public'))); //добовляет файлы которые на компьютере для загрузки если они имеются
 
   const MY_SECRET = "cAtwa1kkEy"
-
-
-  const directory = '/home/smedov/Work/Test/'; //Указываем путь текущей дериктории
 
   let userList = [
       { id: 1, name: 'Admin', login: 'Admin', password:"qwe"},
@@ -36,10 +32,6 @@
   ];
 
   let lengthArray = userList.length // переменная хранящая длинну массива
-
-app.use(express.static(path.join(__dirname, 'public'))); //добовляет файлы которые на компьютере для загрузки если они имеются
-app.use(cors());
-
 
     // ФУНКЦИИ Вспомогательные
 
@@ -72,20 +64,6 @@ app.use(cors());
       return false
     };
 
-    function sortTable(index, array, method) { // Cортировка пользователей по колонкам
-      return userList.slice().sort(function(a, b) {
-      let modifier = -1
-      if (method == "up") modifier = 1
-        array.sort(function(a, b) {
-          if (a[index] > b[index]) return 1*modifier;
-          else if (a[index] < b[index]) return -1*modifier;
-          else return 0;
-        })
-        })
-    }
-
-
-
 
 app.get('/ajax/users', function(req, res) {
   res.json(userList) // рендерим массив пользователей
@@ -102,7 +80,7 @@ app.post('/ajax/users/delete', function(req, res,next) {    // удаление 
     userList.splice(userIndexReal, 1);
     res.json(userList)
   } else {
-    console.log('Данного пользователя не cуществует')
+    return next(createError(400, 'Данного пользователя не cуществует'))
   }
 })
 
@@ -114,21 +92,21 @@ app.post('/ajax/users/add', function(req, res, next) {
   let userLogin = req.body.login; //login пользователя
   let userPassword = req.body.password; //password пользователя
 
-  // ??????????????????????????????????????????
-  let user = {
-    id: ++lengthArray,
-    name: userName,
-    login: userLogin,
-    password: userPassword
-  }
+
 
   if (loginСomparison(userList,userLogin) == false && userName!='' && userLogin!='' && userPassword!=''){
-    userList.push(user)
+    const newUserArr = {
+      id: ++lengthArray,
+      name: userName,
+      login: userLogin,
+      password: userPassword
+    }
+    userList.push(newUserArr)
     res.json(userList);
   }
   else {
     --lengthArray;
-    return next(createError(400, 'Пользователя не существует'))
+    return next(createError(400, 'Логин уже сушествует'))
   }
 });
 
@@ -145,10 +123,10 @@ app.post('/ajax/users/dataChecking', function(req, res,next) {
           userId: user.id,
           userName: user.name,
           userLogin: user.login
-
         })
+      }else {
+        return next(createError(400, 'Вы ввели неправильные логин или пароль'))
       }
-    
     })
 
 
