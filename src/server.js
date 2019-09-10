@@ -65,8 +65,16 @@
     };
 
 
-app.get('/ajax/users', function(req, res) {
-  res.json(userList) // рендерим массив пользователей
+app.get('/ajax/users', function(req, res,next) {
+
+  let token = req.query.token
+  var decoded = jwt.verify(token, MY_SECRET);
+
+  if(token!="") {
+    console.log("/ajax/users: " , token, "decoded: " , decoded)
+    res.json(userList) // рендерим массив пользователей
+  }
+  else return next(createError(417, 'Токен не найден'))
 });
 
 
@@ -74,6 +82,11 @@ app.post('/ajax/users/delete', function(req, res,next) {    // удаление 
   let uniqueUserId = Number(req.body.id) // Id пользователя
   let resultRemoveUser = searchById(userList, uniqueUserId) // функция аунтификации по id
 
+  let token = req.body.token
+  var decoded = jwt.verify(token, MY_SECRET);
+
+  if(token) console.log("/ajax/users: " , token, "decoded: " , decoded)
+  else return next(createError(417, 'Токен не найден'))
 
   if (Boolean(resultRemoveUser)) {
     let userIndexReal = userList.indexOf(resultRemoveUser);
@@ -92,34 +105,37 @@ app.post('/ajax/users/add', function(req, res, next) {
   let userLogin = req.body.login; //login пользователя
   let userPassword = req.body.password; //password пользователя
 
+  let token = req.body.token    //получаем токен от клиента
+  var decoded = jwt.verify(token, MY_SECRET);  // расшифруем токен
 
+  if(token) console.log("/ajax/users: " , token, "decoded: " , decoded)
+  else return next(createError(417, 'Токен не найден'))
 
   if (loginСomparison(userList,userLogin) == false && userName!='' && userLogin!='' && userPassword!=''){
     const newUserArr = {
       id: ++lengthArray,
       name: userName,
       login: userLogin,
-      password: userPassword
+      password: userPassword,
     }
     userList.push(newUserArr)
     res.json(userList);
   }
   else {
-    --lengthArray;
     return next(createError(400, 'Логин уже сушествует'))
   }
 });
 
 app.post('/ajax/users/dataChecking', function(req, res,next) {
       let userLogin = req.body.login; //name пользователя
-      let userPassword = req.body.password; //name пользователя
+      let userPassword = req.body.password; //password пользователя
 
       if (loginСomparison(userList, userLogin) && passwordСheck(userList, userPassword)) {
-        let user = loginСomparison(userList, userLogin)
-        var token = jwt.sign({ name: user.id, login: user.login }, MY_SECRET);
+        let user = loginСomparison(userList, userLogin) //получаем Объект пользователя
+        let token = jwt.sign({ name: user.id, login: user.login }, MY_SECRET); //хещируем токен используя секретный ключ
 
-        res.json({
-          token:token,
+        res.json({  //отправим ответ на сервер JSON
+          token: token, // захешированный токен
           userId: user.id,
           userName: user.name,
           userLogin: user.login
