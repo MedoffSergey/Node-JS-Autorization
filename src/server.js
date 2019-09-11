@@ -35,7 +35,6 @@
 
     // ФУНКЦИИ Вспомогательные
 
-
     function searchById (userList, id) {
       for (let i = 0; i < userList.length; i++) {
         if (userList[i].id == id) {
@@ -44,7 +43,6 @@
       }
       return false
     };
-
 
     function loginСomparison (userList, login) {
       for (let i = 0; i < userList.length; i++) {
@@ -63,70 +61,9 @@
       }
       return false
     };
+//ФУНКЦИИ КОТОРЫМ НЕ НУЖЕН ТОКЕН ДЛЯ ВЫПОЛНЕНИЯ____________________________________________
 
-
-app.get('/ajax/users', function(req, res,next) {
-
-  let token = req.query.token
-  var decoded = jwt.verify(token, MY_SECRET);
-
-  if(token!="") {
-    console.log("/ajax/users: " , token, "decoded: " , decoded)
-    res.json(userList) // рендерим массив пользователей
-  }
-  else return next(createError(417, 'Токен не найден'))
-});
-
-
-app.post('/ajax/users/delete', function(req, res,next) {    // удаление пользователей на стороне клиента
-  let uniqueUserId = Number(req.body.id) // Id пользователя
-  let resultRemoveUser = searchById(userList, uniqueUserId) // функция аунтификации по id
-
-  let token = req.body.token
-  var decoded = jwt.verify(token, MY_SECRET);
-
-  if(token) console.log("/ajax/users: " , token, "decoded: " , decoded)
-  else return next(createError(417, 'Токен не найден'))
-
-  if (Boolean(resultRemoveUser)) {
-    let userIndexReal = userList.indexOf(resultRemoveUser);
-    userList.splice(userIndexReal, 1);
-    res.json(userList)
-  } else {
-    return next(createError(400, 'Данного пользователя не cуществует'))
-  }
-})
-
-
-
-app.post('/ajax/users/add', function(req, res, next) {
-
-  let userName = req.body.name; //name пользователя
-  let userLogin = req.body.login; //login пользователя
-  let userPassword = req.body.password; //password пользователя
-
-  let token = req.body.token    //получаем токен от клиента
-  var decoded = jwt.verify(token, MY_SECRET);  // расшифруем токен
-
-  if(token) console.log("/ajax/users: " , token, "decoded: " , decoded)
-  else return next(createError(417, 'Токен не найден'))
-
-  if (loginСomparison(userList,userLogin) == false && userName!='' && userLogin!='' && userPassword!=''){
-    const newUserArr = {
-      id: ++lengthArray,
-      name: userName,
-      login: userLogin,
-      password: userPassword,
-    }
-    userList.push(newUserArr)
-    res.json(userList);
-  }
-  else {
-    return next(createError(400, 'Логин уже сушествует'))
-  }
-});
-
-app.post('/ajax/users/dataChecking', function(req, res,next) {
+    app.post('/ajax/users/dataChecking', function(req, res,next) {
       let userLogin = req.body.login; //name пользователя
       let userPassword = req.body.password; //password пользователя
 
@@ -145,6 +82,78 @@ app.post('/ajax/users/dataChecking', function(req, res,next) {
       }
     })
 
+//ОБРАБОТЧИК ПЕРЕХВАТЫВАЕТ ВСЕ ПУТИ________________________
+
+
+
+app.use('*', function(req, res, next) {
+
+  let token = req.query.token
+  if(!token) token = req.body.token
+
+
+  //
+  //let token = req.query.token ?  req.query.token : req.body.token
+  //
+  //let token = req.query.token || req.body.token
+  //
+
+
+
+
+
+  console.log("token: " ,token)
+  if (!token) { // приводим к булевному значению (то что токена не существует)
+    return next(createError(412, 'Токен не сушествует'))
+  }
+  let decoded = jwt.verify(token, MY_SECRET); // расшифруем токен
+
+  if (!decoded) {
+    return next(createError(416, 'Токен не валиден'))
+  } else next()
+})
+
+//ФУНКЦИИ ДЛЯ КОТОРЫХ НУЖЕН ТОКЕН__________________________________________________________________________________
+
+app.get('/ajax/users', function(req, res,next) {
+  res.json(userList) // рендерим массив пользователей
+});
+
+
+app.post('/ajax/users/delete', function(req, res,next) {    // удаление пользователей на стороне клиента
+  let uniqueUserId = Number(req.body.id) // Id пользователя
+  let resultRemoveUser = searchById(userList, uniqueUserId) // функция аунтификации по id
+
+  if (Boolean(resultRemoveUser)) {
+    let userIndexReal = userList.indexOf(resultRemoveUser);
+    userList.splice(userIndexReal, 1);
+    res.json(userList)
+  } else {
+    return next(createError(400, 'Данного пользователя не cуществует'))
+  }
+})
+
+
+
+app.post('/ajax/users/add', function(req, res, next) {
+  let userName = req.body.name; //name пользователя
+  let userLogin = req.body.login; //login пользователя
+  let userPassword = req.body.password; //password пользователя
+
+  if (loginСomparison(userList,userLogin) == false && userName!='' && userLogin!='' && userPassword!=''){
+    const newUserArr = {
+      id: ++lengthArray,
+      name: userName,
+      login: userLogin,
+      password: userPassword,
+    }
+    userList.push(newUserArr)
+    res.json(userList);
+  }
+  else {
+    return next(createError(400, 'Логин уже сушествует'))
+  }
+});
 
 
     //ОТЛАВЛИВАЕМ ОШИБКИ ЗДЕСЬ
@@ -155,7 +164,11 @@ app.use(function(req, res, next) {
 })
 
 app.use(function(err, req, res, next) {
-  res.status(err.statusCode)
+/*  console.log(err.statusCode)
+  console.log(err)
+  console.log(err.__proto__)
+  */
+  res.status(err.statusCode || 500)
   res.json({
     success: 0,
     error: err,
