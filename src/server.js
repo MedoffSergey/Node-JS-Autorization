@@ -1,5 +1,7 @@
   //Подключение модулей
   const express = require('express');         // подключаем express
+  const fs = require('fs');
+  const removeFs = require('fs-extra');
   const path = require('path');               //модуль path позволяет указывать пути к дирректориям
   const pug = require('pug');                 // подключаем модуль шаблонизатора
   const cors = require('cors');               //модуль для
@@ -20,6 +22,8 @@
   app.use(express.static(path.join(__dirname, 'public'))); //добовляет файлы которые на компьютере для загрузки если они имеются
 
   const MY_SECRET = "cAtwa1kkEy"      // случайный секретный ключ
+  const directory = '/home/smedov/Work/Test/'; //Указываем путь текущей дериктории
+
   let userList = [                    // массив пользователей
       { id: 1, name: 'Admin', login: 'Admin', password:"qwe"},
       { id: 2, name: 'Igor', login: 'Amstel', password:"123"},
@@ -61,13 +65,13 @@ app.post('/ajax/users/dataChecking', function(req, res, next) {
 
   if (checkUser && checkUser.password === userPassword) {
     let user = loginСomparison(userList, userLogin) //получаем Объект пользователя
-    let token = jwt.sign({ name: user.id, login: user.login }, MY_SECRET); //хешируем токен используя секретный ключ
+    let token = jwt.sign({ id: user.id, login: user.login }, MY_SECRET); //хешируем токен используя секретный ключ
 
     res.json({ //отправим ответ на сервер JSON
       token: token, // захешированный токен
-      userId: user.id,
-      userName: user.name,
-      userLogin: user.login
+      id: user.id,
+      name: user.name,
+      login: user.login
     })
   } else {
     return next(createError(400, 'Вы ввели неправильные логин или пароль'))
@@ -77,7 +81,7 @@ app.post('/ajax/users/dataChecking', function(req, res, next) {
 //ОБРАБОТЧИК ПЕРЕХВАТЫВАЕТ ВСЕ ПУТИ_____________________________________________
 
 app.use('*', function(req, res, next) {
-  let token       //?????
+  let token
   let result = (req.headers.authorization)
   if(result) token = result.substr(7)
   console.log(token)
@@ -132,6 +136,29 @@ app.post('/ajax/users/add', function(req, res, next) {
     return next(createError(400, 'Логин уже сушествует'))
   }
 });
+
+app.get('/ajax/users/giveUser',function(req, res, next) {
+  let token
+  let result = (req.headers.authorization)
+  if(result) token = result.substr(7)
+  let decoded = jwt.verify(token, MY_SECRET)
+  userId = (decoded.id)
+  let currentUser = searchById(userList, userId)// получаем юзера по ид
+
+  res.json({
+    currentUser // отправим юзера на сервер
+  })
+})
+
+app.get('/ajax/users/fileTable',function(req,res,next){
+  const files = fs.readdirSync(directory); //Прочитываем файлы из текущей директории
+
+  for (let i = 0; i < files.length; i++) //убираем расширение
+  {
+    let name = path.basename(files[i], '.conf');
+    files[i] = name;
+  }
+})
 
 //ОТЛАВЛИВАЕМ ОШИБКИ ЗДЕСЬ
 //Используется модуль http-errors_______________________________________________
