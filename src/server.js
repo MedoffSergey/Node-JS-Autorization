@@ -102,7 +102,7 @@ app.get('/ajax/users', function(req, res,next) {
 });
 
 
-app.post('/ajax/users/delete', function(req, res,next) {    // удаление пользователей на стороне клиента
+app.post('/ajax/users/deleteUser', function(req, res,next) {    // удаление пользователей на стороне клиента
   let uniqueUserId = Number(req.body.id) // Id пользователя
   let resultRemoveUser = searchById(userList, uniqueUserId) // функция аунтификации по id
 
@@ -117,7 +117,7 @@ app.post('/ajax/users/delete', function(req, res,next) {    // удаление 
 
 
 
-app.post('/ajax/users/add', function(req, res, next) {
+app.post('/ajax/users/addUser', function(req, res, next) {
   let userName = req.body.name; //name пользователя
   let userLogin = req.body.login; //login пользователя
   let userPassword = req.body.password; //password пользователя
@@ -150,7 +150,7 @@ app.get('/ajax/users/giveUser',function(req, res, next) {
   })
 })
 
-app.get('/ajax/users/fileTable',function(req,res,next){
+app.get('/ajax/users/fileTable',function(req,res){
   const files = fs.readdirSync(directory); //Прочитываем файлы из текущей директории
 
   for (let i = 0; i < files.length; i++) //убираем расширение
@@ -158,7 +158,43 @@ app.get('/ajax/users/fileTable',function(req,res,next){
     let name = path.basename(files[i], '.conf');
     files[i] = name;
   }
+  res.json({
+    files
+  })
 })
+
+app.post('/ajax/users/addFiles', function(req, res) { //добавление
+  let domain = req.body.domain;
+  let fileName = directory + domain + '.conf'
+  let ip = req.body.ip;
+
+  let domenWithoutDots = domain.replace(/\./g, "");   //убираем точку глабально используя регулярные выражения
+
+  let fileContent = fs.readFileSync('/home/smedov/Work/Test/template.conf', "utf8");  //считываем то что находиться в файле
+  var newStr = fileContent.replace(/__DOMAINWITHOUTDOT__/g, domenWithoutDots).replace(/__DOMAIN__/g, domain).replace(/__IP_ADDRESS__/g, ip);  //заменяем контекст в файле
+
+  //записываем в файл домен и ip
+  fs.writeFile(fileName, newStr, function(error) {
+    if (error) throw error; //Использую инструкцию throw для генерирования исключения
+  })
+  res.json({
+    success: 1
+  })
+});
+
+app.post('/ajax/users/deleteFiles', function(req, res) { //  удаления файла из текущей директории
+  const files = directory + req.body.files + '.conf';
+  removeFs.remove(files, err => {   //воспользуемся модулем fs-extra для удаления файла
+    if (err) console.error(err)
+   })
+   res.json({
+     files
+   })
+});
+
+
+
+
 
 //ОТЛАВЛИВАЕМ ОШИБКИ ЗДЕСЬ
 //Используется модуль http-errors_______________________________________________
