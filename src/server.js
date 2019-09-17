@@ -57,6 +57,12 @@
       return false
     };
 
+
+// function isValidIp(ip) {
+//   return /^(?=\d+\.\d+\.\d+\.\d+$)(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\.?){4}$/.test(ip);
+// }
+
+
 //ФУНКЦИИ КОТОРЫМ НЕ НУЖЕН ТОКЕН ДЛЯ ВЫПОЛНЕНИЯ_________________________________
 app.post('/ajax/users/dataChecking', function(req, res, next) {
   let userLogin = req.body.login; //name пользователя
@@ -130,7 +136,9 @@ app.post('/ajax/users/addUser', function(req, res, next) {
       password: userPassword,
     }
     userList.push(newUserArr)
-    res.json(userList);
+    res.json({
+      userList
+    });
   }
   else {
     return next(createError(400, 'Логин уже сушествует'))
@@ -150,24 +158,31 @@ app.get('/ajax/users/giveUser',function(req, res, next) {
   })
 })
 
-app.get('/ajax/users/fileTable',function(req,res){
-  const files = fs.readdirSync(directory); //Прочитываем файлы из текущей директории
+app.get('/ajax/users/fileTable', function(req, res) {
+  let files = fs.readdirSync(directory); //Прочитываем файлы из текущей директории
+  let ip = []
 
   for (let i = 0; i < files.length; i++) //убираем расширение
   {
+    let a = (fs.readFileSync(directory + files[i], 'utf8'));
+
+    regexp = /[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}.[0-9]{1,3}/
+    ip[i] = regexp.exec(a)
+
     let name = path.basename(files[i], '.conf');
     files[i] = name;
+
   }
   res.json({
-    files
+    files,
+    ip
   })
 })
-
 app.post('/ajax/users/addFiles', function(req, res) { //добавление
   let domain = req.body.domain;
   let fileName = directory + domain + '.conf'
   let ip = req.body.ip;
-
+  console.log(ip)
   let domenWithoutDots = domain.replace(/\./g, "");   //убираем точку глабально используя регулярные выражения
 
   let fileContent = fs.readFileSync('/home/smedov/Work/Test/template.conf', "utf8");  //считываем то что находиться в файле
@@ -178,7 +193,7 @@ app.post('/ajax/users/addFiles', function(req, res) { //добавление
     if (error) throw error; //Использую инструкцию throw для генерирования исключения
   })
   res.json({
-    success: 1
+    success : 1
   })
 });
 
@@ -192,6 +207,17 @@ app.post('/ajax/users/deleteFiles', function(req, res) { //  удаления ф
    })
 });
 
+app.get('/ajax/users/search', function(req, res) { //  удаления файла из текущей директории
+  let searchInput =  req.query;
+  console.log(searchInput)
+
+  const filterItems = (searchResult) => { //фильтр Поискового окна
+  return files.filter((el) =>
+    el.indexOf(searchResult) > -1
+    );
+  }
+
+});
 
 
 
