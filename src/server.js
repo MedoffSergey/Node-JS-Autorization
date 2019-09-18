@@ -58,10 +58,6 @@
     };
 
 
-// function isValidIp(ip) {
-//   return /^(?=\d+\.\d+\.\d+\.\d+$)(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\.?){4}$/.test(ip);
-// }
-
 
 //ФУНКЦИИ КОТОРЫМ НЕ НУЖЕН ТОКЕН ДЛЯ ВЫПОЛНЕНИЯ_________________________________
 app.post('/ajax/users/dataChecking', function(req, res, next) {
@@ -160,24 +156,35 @@ app.get('/ajax/users/giveUser',function(req, res, next) {
 
 app.get('/ajax/users/fileTable', function(req, res) {
   let files = fs.readdirSync(directory); //Прочитываем файлы из текущей директории
-  let ip = []
+  let ipArr = []
+  let domainArr = []
+  let domenIpObj = []
+
 
   for (let i = 0; i < files.length; i++) //убираем расширение
   {
-    let a = (fs.readFileSync(directory + files[i], 'utf8'));
+    let str = (fs.readFileSync(directory + files[i], 'utf8'));
 
-    regexp = /[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}.[0-9]{1,3}/
-    ip[i] = regexp.exec(a)
+    regexp = /[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}.[0-9]{1,3}/g
+    let ip = str.match(regexp) || ['###IP Не указан###']
 
-    let name = path.basename(files[i], '.conf');
-    files[i] = name;
+    ipArr.push(ip[0])
 
+    let domain = path.basename(files[i], '.conf');
+    domainArr.push(domain)
+
+    domenIpObj[i] = {
+      ip: ipArr[i],
+      domain: domainArr[i]
+    }
   }
+
   res.json({
-    files,
-    ip
+    domenIpObj
   })
 })
+
+
 app.post('/ajax/users/addFiles', function(req, res) { //добавление
   let domain = req.body.domain;
   let fileName = directory + domain + '.conf'
@@ -206,20 +213,6 @@ app.post('/ajax/users/deleteFiles', function(req, res) { //  удаления ф
      files
    })
 });
-
-app.get('/ajax/users/search', function(req, res) { //  удаления файла из текущей директории
-  let searchInput =  req.query;
-  console.log(searchInput)
-
-  const filterItems = (searchResult) => { //фильтр Поискового окна
-  return files.filter((el) =>
-    el.indexOf(searchResult) > -1
-    );
-  }
-
-});
-
-
 
 
 //ОТЛАВЛИВАЕМ ОШИБКИ ЗДЕСЬ
