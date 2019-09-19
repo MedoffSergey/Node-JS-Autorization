@@ -35,6 +35,8 @@
       { id: 8, name: 'Irina', login: 'Beller', password:"qwerty"}
   ];
 
+  let filesList = []
+
   let lengthArray = userList.length   // переменная хранящая длинну массива
 
     // ФУНКЦИИ Вспомогательные__________________________________________________
@@ -86,7 +88,7 @@ app.use('*', function(req, res, next) {
   let token
   let result = (req.headers.authorization)
   if(result) token = result.substr(7)
-  console.log(token)
+  // console.log(token)
 
   if (!token) { // приводим к булевному значению (то что токена не существует)
     return next(createError(412, 'Токен не сушествует'))
@@ -173,12 +175,15 @@ app.get('/ajax/users/fileTable', function(req, res) {
     let domain = path.basename(files[i], '.conf');
     domainArr.push(domain)
 
+
+
     domenIpObj[i] = {
       ip: ipArr[i],
       domain: domainArr[i]
     }
   }
 
+  filesList = domenIpObj
   res.json({
     domenIpObj
   })
@@ -212,6 +217,50 @@ app.post('/ajax/users/deleteFiles', function(req, res) { //  удаления ф
    res.json({
      files
    })
+});
+
+//_______________ПОИСК________________________________________
+app.post('/ajax/users/tableUserSearch', function(req, res) { //  удаления файла из текущей директории
+     let newSearchList=[]
+     let searchResult = req.body.filterInput.toLowerCase();
+
+     newSearchList = userList.filter(function(elem) {
+       if (
+           elem.login.toLowerCase().indexOf(searchResult) != -1 ||
+           elem.name.toLowerCase().indexOf(searchResult) != -1  ||
+           String(elem.id).toLowerCase().indexOf(searchResult) != -1
+           ) {
+         return true;
+       } else {
+         return false;
+       }
+     });
+       console.log(newSearchList)
+    res.json({
+      newSearchList
+    })
+});
+
+app.post('/ajax/users/tableFilesSearch', function(req, res) { //  удаления файла из текущей директории
+
+  let newSearchList = []
+  let searchResult = req.body.filterInput.toLowerCase();
+
+  newSearchList = filesList.filter(function(elem) {
+    if (
+      elem.domain.toLowerCase().indexOf(searchResult) != -1 ||
+      elem.ip.toLowerCase().indexOf(searchResult) != -1
+    ) {
+      return true;
+    } else {
+      return false;
+    }
+  });
+  console.log(newSearchList)
+
+  res.json({
+    newSearchList
+  })
 });
 
 
