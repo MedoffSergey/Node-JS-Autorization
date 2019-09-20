@@ -4,11 +4,12 @@
   const removeFs = require('fs-extra');
   const path = require('path'); //модуль path позволяет указывать пути к дирректориям
   const pug = require('pug'); // подключаем модуль шаблонизатора
-  const cors = require('cors'); //модуль для
+  const cors = require('cors'); //модуль для axios
   const bodyParser = require('body-parser');
   const createError = require('http-errors') // модуль отлавливания ошибок
-  const jwt = require('jsonwebtoken');
-
+  const jwt = require('jsonwebtoken');  //модуль шифрования
+  const md5 = require('js-md5');  //модуль хеширования MD-5
+  const { SHA3 } = require('sha3');//модуль хеширования SHA3
   const app = express(); //init app
 
   app.set('views', path.join(__dirname, 'views')); //указываем путь к pug файлам
@@ -28,14 +29,14 @@
   const MY_SECRET = "cAtwa1kkEy" // случайный секретный ключ
   const directory = '/home/smedov/Work/Test/'; //Указываем путь текущей дериктории
   let userList = [                    // массив пользователей
-      { id: 1, name: 'Admin', login: 'Admin', password:"qwe"},
-      { id: 2, name: 'Igor', login: 'Amstel', password:"123"},
-      { id: 3, name: 'Serega', login: 'MRG_Serejka', password:"12345"},
-      { id: 4, name: 'Artur', login: 'Archi', password:"qwerty"},
-      { id: 5, name: 'Elsa', login: 'Els@', password:"AdG4Q1q7"},
-      { id: 6, name: 'Sanek', login: 'MRG_Sanek', password:"Sanekkk"},
-      { id: 7, name: 'Serega', login: 'GREY', password:"3145Wqq1"},
-      { id: 8, name: 'Irina', login: 'Beller', password:"qwerty"}
+      { id: 1, name: 'Admin', login: 'Admin', password:"a50ddf0c61a045a2a328dc74f56a8389ee897082ee92b444050e62daf3cc44d9"},
+      { id: 2, name: 'Igor', login: 'Amstel', password:"a03ab19b866fc585b5cb1812a2f63ca861e7e7643ee5d43fd7106b623725fd67"},
+      { id: 3, name: 'Serega', login: 'MRG_Serejka', password:"7d4e3eec80026719639ed4dba68916eb94c7a49a053e05c8f9578fe4e5a3d7ea"},
+      { id: 4, name: 'Artur', login: 'Archi', password:"f171cbb35dd1166a20f99b5ad226553e122f3c0f2fe981915fb9e4517aac9038"},
+      { id: 5, name: 'Elsa', login: 'Els@', password:"b06fcd7f7bfa6ef09fd419d437f1473f5ff52094e6e8d464bc101d9ec37fa5bb"},
+      { id: 6, name: 'Sanek', login: 'MRG_Sanek', password:"c9aef782275b17f6e56db4f203a733c9b1848cc90af05bebd64d898942e6f51c"},
+      { id: 7, name: 'Serega', login: 'GREY', password:"cdeb675afe9e277c24df1d28f7d43ff5cdf871915c227d543be68a749edc985c"},
+      { id: 8, name: 'Irina', login: 'Beller', password:"f171cbb35dd1166a20f99b5ad226553e122f3c0f2fe981915fb9e4517aac9038"}
   ];
 
   let filesList = []  // массив для файлов
@@ -69,7 +70,12 @@ app.post('/ajax/users/dataChecking', function(req, res, next) {
   let userPassword = req.body.password; //password пользователя
   let checkUser = loginСomparison(userList, userLogin) //проверим есть ли такой пользоваль
 
-  if (checkUser && checkUser.password === userPassword) {
+  const hash = new SHA3(256);
+  hash.update(userPassword);
+  let hashUserPsw = hash.digest('hex');
+
+
+  if (checkUser && checkUser.password === hashUserPsw)  {
     let user = loginСomparison(userList, userLogin) //получаем Объект пользователя
     let token = jwt.sign({ id: user.id, login: user.login }, MY_SECRET); //хешируем токен используя секретный ключ
 
@@ -102,6 +108,7 @@ app.use('*', function(req, res, next) {
 //ФУНКЦИИ ДЛЯ КОТОРЫХ НУЖЕН ТОКЕН_______________________________________________
 
 app.get('/ajax/users', function(req, res,next) {
+
   res.json(userList) // рендерим массив пользователей
 });
 
@@ -126,12 +133,16 @@ app.post('/ajax/users/addUser', function(req, res, next) {
   let userLogin = req.body.login; //login пользователя
   let userPassword = req.body.password; //password пользователя
 
+  const hash = new SHA3(256);
+  hash.update(userPassword);
+  let hashUserPsw = hash.digest('hex');
+
   if (loginСomparison(userList, userLogin) == false && userName != '' && userLogin != '' && userPassword != '') {
     const newUserArr = {
       id: ++lengthArray,
       name: userName,
       login: userLogin,
-      password: userPassword,
+      password: hashUserPsw,
     }
     userList.push(newUserArr)
     res.json({
@@ -211,7 +222,7 @@ app.post('/ajax/users/deleteFiles', function(req, res) { //  удаления ф
     if (err) console.error(err)
   })
   res.json({
-    files
+    success: 1
   })
 });
 
