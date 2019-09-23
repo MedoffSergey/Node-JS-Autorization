@@ -29,14 +29,14 @@
   const MY_SECRET = "cAtwa1kkEy" // случайный секретный ключ
   const directory = '/home/smedov/Work/Test/'; //Указываем путь текущей дериктории
   let userList = [                    // массив пользователей
-      { id: 1, name: 'Admin', login: 'Admin', password:"392de49fdf72a89b44ae61a4bc14501128f0a21f30984c8e80484781981d39ad",salt:"$2b$10$mAo9BxmMip..vK50xxB6he"},
-      { id: 2, name: 'Igor', login: 'Amstel', password:"3ad55d87ad02469f64bf4e2348c74c179f6a295c02b151408689b1c13a1205b9",salt:"$2b$10$Kkz.LFXX3BHHMjYdkym6Tu"},
-      { id: 3, name: 'Serega', login: 'MRG_Serejka', password:"6ab2d3047a7fb1fba804d6c2cd6cf056f62f3ad2bcdb7bf2fd2f0c6a1f5f9a2f",salt:"$2b$10$6jBpvDVVqB97xK/wKRaEte"},
-      { id: 4, name: 'Artur', login: 'Archi', password:"02fdb9c93d5e14278a0ae4a320c79479fc8d9eb15d216210dbcf5ec3b7dc8cb2",salt:"$2b$10$9R8HTlrq6.w1eNUfGX3jY."},
-      { id: 5, name: 'Elsa', login: 'Els@', password:"1bdaa56322529c32d1e6a3b671b406884e9d93c3d2c285fbae8e4c6896c40912",salt:"$2b$10$aQAU0HiEMOkuVQ8PDXrl.O"},
-      { id: 6, name: 'Sanek', login: 'MRG_Sanek', password:"dc468812b8ae6c9281c4d87dc5462962f1574a3f290e807538a08733babf2ba1",salt:"$2b$10$9yL.byCRVXJXj49g7gDUIu"},
-      { id: 7, name: 'Serega', login: 'GREY', password:"00b87e9b8f7d890fa512fb3b998b2c9e9d0c9538bc68f9181db53a1cae543292",salt:"$2b$10$aRXOtSeALhw2IF2uuuSW.O"},
-      { id: 8, name: 'Irina', login: 'Beller', password:"d942f886b59d52489936c871f0809469490261ebbfb1384fa2d7a596c27b1447",salt:"$2b$10$WAf7WGAb8HBk8fNsRh5FVe"}
+      { id: 1, status: 'Admin', name: 'Admin', login: 'Admin', password:"392de49fdf72a89b44ae61a4bc14501128f0a21f30984c8e80484781981d39ad",salt:"$2b$10$mAo9BxmMip..vK50xxB6he"},
+      { id: 2, status: 'User', name: 'Igor', login: 'Amstel', password:"3ad55d87ad02469f64bf4e2348c74c179f6a295c02b151408689b1c13a1205b9",salt:"$2b$10$Kkz.LFXX3BHHMjYdkym6Tu"},
+      { id: 3, status: 'User', name: 'Serega', login: 'MRG_Serejka', password:"6ab2d3047a7fb1fba804d6c2cd6cf056f62f3ad2bcdb7bf2fd2f0c6a1f5f9a2f",salt:"$2b$10$6jBpvDVVqB97xK/wKRaEte"},
+      { id: 4, status: 'User', name: 'Artur', login: 'Archi', password:"02fdb9c93d5e14278a0ae4a320c79479fc8d9eb15d216210dbcf5ec3b7dc8cb2",salt:"$2b$10$9R8HTlrq6.w1eNUfGX3jY."},
+      { id: 5, status: 'User', name: 'Elsa', login: 'Els@', password:"1bdaa56322529c32d1e6a3b671b406884e9d93c3d2c285fbae8e4c6896c40912",salt:"$2b$10$aQAU0HiEMOkuVQ8PDXrl.O"},
+      { id: 6, status: 'User', name: 'Sanek', login: 'MRG_Sanek', password:"dc468812b8ae6c9281c4d87dc5462962f1574a3f290e807538a08733babf2ba1",salt:"$2b$10$9yL.byCRVXJXj49g7gDUIu"},
+      { id: 7, status: 'User', name: 'Serega', login: 'GREY', password:"00b87e9b8f7d890fa512fb3b998b2c9e9d0c9538bc68f9181db53a1cae543292",salt:"$2b$10$aRXOtSeALhw2IF2uuuSW.O"},
+      { id: 8, status: 'User', name: 'Irina', login: 'Beller', password:"d942f886b59d52489936c871f0809469490261ebbfb1384fa2d7a596c27b1447",salt:"$2b$10$WAf7WGAb8HBk8fNsRh5FVe"}
   ];
 
   let filesList = []  // массив для файлов
@@ -63,30 +63,31 @@
       return false
     };
 
+    function hashUser(userPassword,salt) {
+      const hash = new SHA3(256);
+      hash.update(userPassword+salt);
+      let hashUserPsw = hash.digest('hex');
+      return hashUserPsw;
+    }
 
 //ФУНКЦИИ КОТОРЫМ НЕ НУЖЕН ТОКЕН ДЛЯ ВЫПОЛНЕНИЯ_________________________________
 app.post('/ajax/users/dataChecking', function(req, res, next) {
   let userLogin = req.body.login; //name пользователя
   let userPassword = req.body.password; //password пользователя
   let checkUser = loginСomparison(userList, userLogin) //проверим есть ли такой пользоваль
+  let salt = checkUser.salt
+  let result = hashUser(userPassword,salt)
 
-
-  const hash = new SHA3(256);
-  hash.update(userPassword+checkUser.salt);
-  let hashUserPsw = hash.digest('hex');
-
-
-
-  if (checkUser && checkUser.password === hashUserPsw)  {
+  if (checkUser && checkUser.password === result)  {
     let user = loginСomparison(userList, userLogin) //получаем Объект пользователя
     let token = jwt.sign({ id: user.id, login: user.login }, MY_SECRET); //хешируем токен используя секретный ключ
 
-    res.json({ //отправим ответ на сервер JSON
+    res.json({
       token: token, // захешированный токен
       id: user.id,
       name: user.name,
       login: user.login,
-
+      status: user.status
     })
   } else {
     return next(createError(400, 'Вы ввели неправильные логин или пароль'))
@@ -134,21 +135,21 @@ app.post('/ajax/users/addUser', function(req, res, next) {
   let userName = req.body.name; //name пользователя
   let userLogin = req.body.login; //login пользователя
   let userPassword = req.body.password; //password пользователя
+  let status = req.body.status
+  if (status) {status="Admin"}
+  else status = "User"
 
   const saltRounds = 10;
   let salt = bcrypt.genSaltSync(saltRounds);
-
-  const hash = new SHA3(256);
-  hash.update(userPassword+salt);
-  let hashUserPsw = hash.digest('hex');
-
+  let result = hashUser(userPassword,salt)
 
   if (loginСomparison(userList, userLogin) == false && userName != '' && userLogin != '' && userPassword != '') {
     const newUserArr = {
       id: ++lengthArray,
+      status: status,
       name: userName,
       login: userLogin,
-      password: hashUserPsw,
+      password: result,
       salt: salt
     }
     userList.push(newUserArr)
@@ -167,15 +168,28 @@ app.get('/ajax/users/giveUser', function(req, res, next) {
   let decoded = jwt.verify(token, MY_SECRET)
   userId = (decoded.id)
   let currentUser = searchById(userList, userId) // получаем юзера по ид
-
+  console.log(currentUser)
   res.json({
     currentUser
   })
 })
 
 app.post('/ajax/users/changePassword', function(req, res, next) {
+  let userId=req.body.userId
+  let firstInput=req.body.newPass.firstInput
+  let secondInput=req.body.newPass.secondInput
+  let user = searchById(userList,userId)
 
-  console.log(req.body)
+  if(firstInput===secondInput && firstInput!='' && secondInput!='')  {
+    let newPsw = firstInput
+
+    const saltRounds = 10;
+    let salt = bcrypt.genSaltSync(saltRounds);
+
+    let result = hashUser(user.password,salt)
+    user.salt = salt
+    user.password = result
+  }
 
   res.json({
     success: 1
