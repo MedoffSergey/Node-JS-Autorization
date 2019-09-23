@@ -8,7 +8,7 @@
   const bodyParser = require('body-parser');
   const createError = require('http-errors') // модуль отлавливания ошибок
   const jwt = require('jsonwebtoken');  //модуль шифрования
-  const md5 = require('js-md5');  //модуль хеширования MD-5
+  const bcrypt = require('bcrypt');//модуль для соли
   const { SHA3 } = require('sha3');//модуль хеширования SHA3
   const app = express(); //init app
 
@@ -29,14 +29,14 @@
   const MY_SECRET = "cAtwa1kkEy" // случайный секретный ключ
   const directory = '/home/smedov/Work/Test/'; //Указываем путь текущей дериктории
   let userList = [                    // массив пользователей
-      { id: 1, name: 'Admin', login: 'Admin', password:"a50ddf0c61a045a2a328dc74f56a8389ee897082ee92b444050e62daf3cc44d9"},
-      { id: 2, name: 'Igor', login: 'Amstel', password:"a03ab19b866fc585b5cb1812a2f63ca861e7e7643ee5d43fd7106b623725fd67"},
-      { id: 3, name: 'Serega', login: 'MRG_Serejka', password:"7d4e3eec80026719639ed4dba68916eb94c7a49a053e05c8f9578fe4e5a3d7ea"},
-      { id: 4, name: 'Artur', login: 'Archi', password:"f171cbb35dd1166a20f99b5ad226553e122f3c0f2fe981915fb9e4517aac9038"},
-      { id: 5, name: 'Elsa', login: 'Els@', password:"b06fcd7f7bfa6ef09fd419d437f1473f5ff52094e6e8d464bc101d9ec37fa5bb"},
-      { id: 6, name: 'Sanek', login: 'MRG_Sanek', password:"c9aef782275b17f6e56db4f203a733c9b1848cc90af05bebd64d898942e6f51c"},
-      { id: 7, name: 'Serega', login: 'GREY', password:"cdeb675afe9e277c24df1d28f7d43ff5cdf871915c227d543be68a749edc985c"},
-      { id: 8, name: 'Irina', login: 'Beller', password:"f171cbb35dd1166a20f99b5ad226553e122f3c0f2fe981915fb9e4517aac9038"}
+      { id: 1, name: 'Admin', login: 'Admin', password:"392de49fdf72a89b44ae61a4bc14501128f0a21f30984c8e80484781981d39ad",salt:"$2b$10$mAo9BxmMip..vK50xxB6he"},
+      { id: 2, name: 'Igor', login: 'Amstel', password:"3ad55d87ad02469f64bf4e2348c74c179f6a295c02b151408689b1c13a1205b9",salt:"$2b$10$Kkz.LFXX3BHHMjYdkym6Tu"},
+      { id: 3, name: 'Serega', login: 'MRG_Serejka', password:"6ab2d3047a7fb1fba804d6c2cd6cf056f62f3ad2bcdb7bf2fd2f0c6a1f5f9a2f",salt:"$2b$10$6jBpvDVVqB97xK/wKRaEte"},
+      { id: 4, name: 'Artur', login: 'Archi', password:"02fdb9c93d5e14278a0ae4a320c79479fc8d9eb15d216210dbcf5ec3b7dc8cb2",salt:"$2b$10$9R8HTlrq6.w1eNUfGX3jY."},
+      { id: 5, name: 'Elsa', login: 'Els@', password:"1bdaa56322529c32d1e6a3b671b406884e9d93c3d2c285fbae8e4c6896c40912",salt:"$2b$10$aQAU0HiEMOkuVQ8PDXrl.O"},
+      { id: 6, name: 'Sanek', login: 'MRG_Sanek', password:"dc468812b8ae6c9281c4d87dc5462962f1574a3f290e807538a08733babf2ba1",salt:"$2b$10$9yL.byCRVXJXj49g7gDUIu"},
+      { id: 7, name: 'Serega', login: 'GREY', password:"00b87e9b8f7d890fa512fb3b998b2c9e9d0c9538bc68f9181db53a1cae543292",salt:"$2b$10$aRXOtSeALhw2IF2uuuSW.O"},
+      { id: 8, name: 'Irina', login: 'Beller', password:"d942f886b59d52489936c871f0809469490261ebbfb1384fa2d7a596c27b1447",salt:"$2b$10$WAf7WGAb8HBk8fNsRh5FVe"}
   ];
 
   let filesList = []  // массив для файлов
@@ -70,9 +70,11 @@ app.post('/ajax/users/dataChecking', function(req, res, next) {
   let userPassword = req.body.password; //password пользователя
   let checkUser = loginСomparison(userList, userLogin) //проверим есть ли такой пользоваль
 
+
   const hash = new SHA3(256);
-  hash.update(userPassword);
+  hash.update(userPassword+checkUser.salt);
   let hashUserPsw = hash.digest('hex');
+
 
 
   if (checkUser && checkUser.password === hashUserPsw)  {
@@ -83,7 +85,8 @@ app.post('/ajax/users/dataChecking', function(req, res, next) {
       token: token, // захешированный токен
       id: user.id,
       name: user.name,
-      login: user.login
+      login: user.login,
+
     })
   } else {
     return next(createError(400, 'Вы ввели неправильные логин или пароль'))
@@ -106,9 +109,9 @@ app.use('*', function(req, res, next) {
   } else next()
 })
 //ФУНКЦИИ ДЛЯ КОТОРЫХ НУЖЕН ТОКЕН_______________________________________________
+//_________USER___________________
 
 app.get('/ajax/users', function(req, res,next) {
-
   res.json(userList) // рендерим массив пользователей
 });
 
@@ -127,15 +130,18 @@ app.post('/ajax/users/deleteUser', function(req, res, next) { // удалени�
 })
 
 
-
 app.post('/ajax/users/addUser', function(req, res, next) {
   let userName = req.body.name; //name пользователя
   let userLogin = req.body.login; //login пользователя
   let userPassword = req.body.password; //password пользователя
 
+  const saltRounds = 10;
+  let salt = bcrypt.genSaltSync(saltRounds);
+
   const hash = new SHA3(256);
-  hash.update(userPassword);
+  hash.update(userPassword+salt);
   let hashUserPsw = hash.digest('hex');
+
 
   if (loginСomparison(userList, userLogin) == false && userName != '' && userLogin != '' && userPassword != '') {
     const newUserArr = {
@@ -143,6 +149,7 @@ app.post('/ajax/users/addUser', function(req, res, next) {
       name: userName,
       login: userLogin,
       password: hashUserPsw,
+      salt: salt
     }
     userList.push(newUserArr)
     res.json({
@@ -165,6 +172,17 @@ app.get('/ajax/users/giveUser', function(req, res, next) {
     currentUser
   })
 })
+
+app.post('/ajax/users/changePassword', function(req, res, next) {
+
+  console.log(req.body)
+
+  res.json({
+    success: 1
+  })
+})
+
+//______________FILES________________
 
 app.get('/ajax/users/fileTable', function(req, res) {
   let files = fs.readdirSync(directory); //Прочитываем файлы из текущей директории
