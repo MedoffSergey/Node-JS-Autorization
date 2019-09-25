@@ -11,7 +11,7 @@
   const bcrypt = require('bcrypt');//модуль для соли
   const { SHA3 } = require('sha3');//модуль хеширования SHA3
   const app = express(); //init app
-  const mysql = require('mysql');
+  const mysql = require('mysql2');
   const cfg   = require( './dbConfig' );
   const dbClass = require ('./db.js')
 
@@ -38,59 +38,74 @@
       return db.query( 'SELECT * FROM userList', [] )
     }
 
-    function searchById(userList, id) {
-      for (let i = 0; i < userList.length; i++) {
-        if (userList[i].id == id) {
-          return userList[i]
-        }
-      }
-      return false
+    function addNewUser(newUserArr) {
+      const db = new dbClass()
+      return db.query( "INSERT INTO userList (status,name, login, password,salt) VALUES (?, ?, ?, ?, ?)"  , [ newUserArr.status, newUserArr.name, newUserArr.login,newUserArr.password,newUserArr.salt] )
+    }
+
+    function deleteUser(uniqueUserId) {
+      const db = new dbClass()
+      return db.query( "DELETE FROM userList where id = ? "  , [uniqueUserId] )
+    }
+
+    function userLoginAuth(userLogin) {
+      const db = new dbClass()
+      return db.query( "SELECT * FROM userList WHERE login = ? "  , [userLogin] )
+    }
+
+    function changePasswordUser(id,hash,salt) {
+      console.log(id,'',hash,'',salt)
+      const db = new dbClass()
+      return db.query( "UPDATE userList SET password=?,salt=? WHERE id=? "  , [hash,salt,id] )
     };
 
-    function loginСomparison(userList, login) {
-      for (let i = 0; i < userList.length; i++) {
-        if (userList[i].login === login) {
-          return userList[i]
-        }
-      }
-      return false
+
+    function searchById(id) {
+      const db = new dbClass()
+      return db.query( "SELECT * FROM userList WHERE id = ? "  , [id] )
     };
 
-    function hashUser(userPassword,salt) {
+
+    function hashUser(userPassword, salt) {
       const hash = new SHA3(256);
-      hash.update(userPassword+salt);
+      hash.update(userPassword + salt);
       let hashUserPsw = hash.digest('hex');
       return hashUserPsw;
     }
 
-//ФУНКЦИИ КОТОРЫМ НЕ НУЖЕН ТОКЕН ДЛЯ ВЫПОЛНЕНИЯ_________________________________
-app.post('/ajax/users/dataChecking', function(req, res, next) {
-   user().then(userList=>{
+    //ФУНКЦИИ КОТОРЫМ НЕ НУЖЕН ТОКЕН ДЛЯ ВЫПОЛНЕНИЯ_________________________________
+    app.post('/ajax/users/dataChecking', function(req, res, next) {
 
-     let userLogin = req.body.login; //name пользователя
-     let userPassword = req.body.password; //password пользователя
+      let userLogin = req.body.login; //name пользователя
+      let userPassword = req.body.password; //password пользователя
 
-     let checkUser = loginСomparison(userList, userLogin) //проверим есть ли такой пользоваль
-     let salt = checkUser.salt
-     let result = hashUser(userPassword,salt)
+      userLoginAuth(userLogin).then(user => {
+        let checkUser = user //проверим есть ли такой пользоваль
+        let salt = checkUser[0].salt
+        let result = hashUser(userPassword, salt)
 
-     if (checkUser && checkUser.password === result)  {
-       let user = loginСomparison(userList, userLogin) //получаем Объект пользователя
-       let token = jwt.sign({ id: user.id, login: user.login }, MY_SECRET); //хешируем токен используя секретный ключ
+        if (checkUser && checkUser[0].password === result) {
+          let token = jwt.sign({
+            id: user[0].id,
+            login: user[0].login
+          }, MY_SECRET); //хешируем токен используя секретный ключ
 
-       res.json({
-         token: token, // захешированный токен
-         id: user.id,
-         name: user.name,
-         login: user.login,
-         status: user.status
-       })
-     } else {
-       return next(createError(400, 'Вы ввели неправильные логин или пароль'))
-     }
-   })
+          res.json({
+            token: token, // захешированный токен
+            id: user[0].id,
+            name: user[0].name,
+            login: user[0].login,
+            status: user[0].status
+          })
 
-})
+        } else {
+          return next(createError(400, 'Вы ввели неправильные логин или пароль'))
+        }
+
+      })
+
+    })
+
 //ОБРАБОТЧИК ПЕРЕХВАТЫВАЕТ ВСЕ ПУТИ_____________________________________________
 
 app.use('*', function(req, res, next) {
@@ -119,23 +134,14 @@ app.get('/ajax/users', function(req, res,next) {
 
 app.post('/ajax/users/deleteUser', function(req, res, next) { // удаление пользователей на стороне клиента
     user().then(userList=>{
-
       let uniqueUserId = Number(req.body.id) // Id пользователя преобразованный как числовой тип данных
-      let resultRemoveUser = searchById(userList, uniqueUserId) // функция аунтификации по id
-
-      if (resultRemoveUser) {
-        let userIndexReal = userList.indexOf(resultRemoveUser);
-        userList.splice(userIndexReal, 1);
+      deleteUser(uniqueUserId)
         res.json(userList)
-      } else {
-        return next(createError(400, 'Данного пользователя не cуществует'))
-      }
   })
 })
 
 
 app.post('/ajax/users/addUser', function(req, res, next) {
-  user().then(userList=>{
     let userName = req.body.name; //name пользователя
     let userLogin = req.body.login; //login пользователя
     let userPassword = req.body.password; //password пользователя
@@ -147,34 +153,34 @@ app.post('/ajax/users/addUser', function(req, res, next) {
     let salt = bcrypt.genSaltSync(saltRounds);
     let result = hashUser(userPassword,salt)
 
-    if (loginСomparison(userList, userLogin) == false && userName != '' && userLogin != '' && userPassword != '') {
+    if (userName != '' && userLogin != '' && userPassword != '') {
       const newUserArr = {
-        id: userList.length+1,
         status: status,
         name: userName,
         login: userLogin,
         password: result,
         salt: salt
       }
-      userList.push(newUserArr)
+      addNewUser(newUserArr).then(currentUser => {
       res.json({
-        userList
+        currentUser
       });
+    })
     } else {
       return next(createError(400, 'Логин уже сушествует'))
       }
-  })
+
 });
 
 app.get('/ajax/users/giveUser', function(req, res, next) {
-  user().then(userList=>{
+
     let token
     let result = (req.headers.authorization)
     if (result) token = result.substr(7)
     let decoded = jwt.verify(token, MY_SECRET)
     userId = (decoded.id)
-    let currentUser = searchById(userList, userId) // получаем юзера по ид
-
+    searchById(userId).then(user => { // получаем юзера по ид
+      let currentUser = user[0]
     res.json({
       currentUser
     })
@@ -185,22 +191,22 @@ app.post('/ajax/users/changePassword', function(req, res, next) {
   let userId=req.body.userId
   let firstInput=req.body.newPass.firstInput
   let secondInput=req.body.newPass.secondInput
-  let user = searchById(userList,userId)
 
-  if(firstInput===secondInput && firstInput!='' && secondInput!='')  {
-    let newPsw = firstInput
+  searchById(userId).then(currentUser => {
+    if(firstInput===secondInput && firstInput!='' && secondInput!='')  {
+      let newPsw = firstInput
 
-    const saltRounds = 10;
-    let salt = bcrypt.genSaltSync(saltRounds);
+      const saltRounds = 10;
+      let salt = bcrypt.genSaltSync(saltRounds);
 
-    let result = hashUser(user.password,salt)
-    user.salt = salt
-    user.password = result
-  }
+      let hashResult = hashUser(currentUser[0].password,salt)
+      changePasswordUser(userId,hashResult,salt)
 
+    }
   res.json({
     success: 1
   })
+})
 })
 
 //______________FILES________________

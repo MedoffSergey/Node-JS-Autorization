@@ -1,6 +1,6 @@
-const mysql = require( 'mysql' ),
+const mysql = require( 'mysql2' ),
       cfg   = require( './dbConfig' );
- 
+
 module.exports = class Database {
   constructor () {
     this.connection = mysql.createPool( {
@@ -8,7 +8,7 @@ module.exports = class Database {
       database: cfg.db, charset: cfg.charset
     } );
   }
- 
+
   query ( sql, args ) {
     return new Promise( ( resolve, reject ) => {
       this.connection.query( sql, args, ( error, rows ) => {
@@ -20,7 +20,7 @@ module.exports = class Database {
       } );
     } );
   }
- 
+
   close () {
     return new Promise( ( resolve, reject ) => {
       this.connection.end( error => {
@@ -32,12 +32,12 @@ module.exports = class Database {
     } );
   }
 };
- 
+
 /**
  * Usage:
  * @type {module.Database}
  */
 // let db = new Database();
- 
+
 // db.query( 'SELECT * FROM users', [] )
 //   .then( result => console.log( result ) );
