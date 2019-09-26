@@ -59,12 +59,20 @@
     function changePasswordUser(id, hash, salt) {
       const db = new dbClass()
       return db.query("UPDATE userList SET password=?,salt=? WHERE id=? ", [hash, salt, id])
+      .then(user => {
+        if(user.length>0) return user[0]
+        return null
+      })
     };
 
 
     function searchById(id) {
       const db = new dbClass()
       return db.query("SELECT * FROM userList WHERE id = ? ", [id])
+      .then(user => {
+        if(user.length>0) return user[0]
+        return null
+      })
     };
 
 
@@ -125,62 +133,63 @@ app.use('*', function(req, res, next) {
 //ФУНКЦИИ ДЛЯ КОТОРЫХ НУЖЕН ТОКЕН_______________________________________________
 //_________USER___________________
 
-app.get('/ajax/users', function(req, res,next) {
-  user().then(userList=>{
+app.get('/ajax/users', function(req, res, next) {
+  user().then(userList => {
     res.json(userList) // рендерим массив пользователей
   })
 });
 
 
 app.post('/ajax/users/deleteUser', function(req, res, next) { // удаление пользователей на стороне клиента
-    user().then(userList=>{
-      let uniqueUserId = Number(req.body.id) // Id пользователя преобразованный как числовой тип данных
-      deleteUser(uniqueUserId)
-        res.json(userList)
+  let uniqueUserId = Number(req.body.id) // Id пользователя преобразованный как числовой тип данных
+
+  deleteUser(uniqueUserId).then(() => {
+    res.json({
+      succes: 1
+    })
   })
 })
 
 
 app.post('/ajax/users/addUser', function(req, res, next) {
-    let userName = req.body.name; //name пользователя
-    let userLogin = req.body.login; //login пользователя
-    let userPassword = req.body.password; //password пользователя
-    let status = req.body.status
-    if (status) {status="Admin"}
-    else {status = "User"}
+  let userName = req.body.name; //name пользователя
+  let userLogin = req.body.login; //login пользователя
+  let userPassword = req.body.password; //password пользователя
+  let status = req.body.status
+  if (status) { status = "Admin"}
+  else {status = "User" }
 
-    const saltRounds = 10;
-    let salt = bcrypt.genSaltSync(saltRounds);
-    let result = hashUser(userPassword,salt)
+  const saltRounds = 10;
+  let salt = bcrypt.genSaltSync(saltRounds);
+  let result = hashUser(userPassword, salt)
 
-    if (userName != '' && userLogin != '' && userPassword != '') {
-      const newUserArr = {
-        status: status,
-        name: userName,
-        login: userLogin,
-        password: result,
-        salt: salt
-      }
-      addNewUser(newUserArr).then(currentUser => {
+  if (userName != '' && userLogin != '' && userPassword != '') {
+    const newUserArr = {
+      status: status,
+      name: userName,
+      login: userLogin,
+      password: result,
+      salt: salt
+    }
+    addNewUser(newUserArr).then(currentUser => {
       res.json({
         currentUser
       });
     })
-    } else {
-      return next(createError(400, 'Логин уже сушествует'))
-      }
+  } else {
+    return next(createError(400, 'Логин уже сушествует'))
+  }
 
 });
 
 app.get('/ajax/users/giveUser', function(req, res, next) {
 
-    let token
-    let result = (req.headers.authorization)
-    if (result) token = result.substr(7)
-    let decoded = jwt.verify(token, MY_SECRET)
-    userId = (decoded.id)
-    searchById(userId).then(user => { // получаем юзера по ид
-      let currentUser = user[0]
+  let token
+  let result = (req.headers.authorization)
+  if (result) token = result.substr(7)
+  let decoded = jwt.verify(token, MY_SECRET)
+  userId = (decoded.id)
+  searchById(userId).then(currentUser => { // получаем юзера по ид
     res.json({
       currentUser
     })
@@ -188,24 +197,23 @@ app.get('/ajax/users/giveUser', function(req, res, next) {
 })
 
 app.post('/ajax/users/changePassword', function(req, res, next) {
-  let userId=req.body.userId
-  let firstInput=req.body.newPass.firstInput
-  let secondInput=req.body.newPass.secondInput
+  let userId = req.body.userId
+  let firstInput = req.body.newPass.firstInput
+  let secondInput = req.body.newPass.secondInput
 
   searchById(userId).then(currentUser => {
-    if(firstInput===secondInput && firstInput!='' && secondInput!='')  {
+    if (firstInput === secondInput && firstInput != '' && secondInput != '') {
       const saltRounds = 10;
       let salt = bcrypt.genSaltSync(saltRounds);
 
-      let hashResult = hashUser(currentUser[0].password,salt)
-      changePasswordUser(userId,hashResult,salt)
+      let hashResult = hashUser(currentUser.password, salt)
+      changePasswordUser(userId, hashResult, salt)
     }
-  res.json({
-    success: 1
+    res.json({
+      success: 1
+    })
   })
 })
-})
-
 //______________FILES________________
 
 app.get('/ajax/users/fileTable', function(req, res) {
@@ -264,26 +272,25 @@ app.post('/ajax/users/deleteFiles', function(req, res) { //  удаления ф
     success: 1
   })
 });
-
 //_______________FILTER________________________________________
 
 app.post('/ajax/users/tableUserSearch', function(req, res) { //  удаления файла из текущей директории
-    user().then(userList=>{
-     let newSearchList=[]
-     let searchResult = req.body.filterInput.toLowerCase();
-     console.log(searchResult)
-     newSearchList = userList.filter(function(elem) {
-       if (
-           elem.login.toLowerCase().indexOf(searchResult) != -1 ||
-           elem.name.toLowerCase().indexOf(searchResult) != -1  ||
-           String(elem.id).toLowerCase().indexOf(searchResult) != -1
-           ) {
-         return true;
-       } else {
-         return false;
-       }
-     });
-     console.log(newSearchList)
+  let newSearchList = []
+  let searchResult = req.body.filterInput.toLowerCase();
+
+  user().then(userList => {
+    newSearchList = userList.filter(function(elem) {
+      if (
+        elem.login.toLowerCase().indexOf(searchResult) != -1 ||
+        elem.name.toLowerCase().indexOf(searchResult) != -1 ||
+        String(elem.id).toLowerCase().indexOf(searchResult) != -1
+      ) {
+        return true;
+      } else {
+        return false;
+      }
+    });
+    console.log(newSearchList)
     res.json({
       newSearchList
     })
@@ -305,12 +312,10 @@ app.post('/ajax/users/tableFilesSearch', function(req, res) { //  удалени
     }
   });
 
-
   res.json({
     newSearchList
   })
 });
-
 
 //ОТЛАВЛИВАЕМ ОШИБКИ ЗДЕСЬ
 //Используется модуль http-errors_______________________________________________
