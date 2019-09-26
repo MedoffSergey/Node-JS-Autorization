@@ -16,7 +16,6 @@
   const dbClass = require ('./db.js')
 
 
-
   app.set('views', path.join(__dirname, 'views')); //указываем путь к pug файлам
   app.set('view engine', 'pug'); // указываем используемый шаблонизатор HTML кода
 
@@ -35,34 +34,37 @@
     // ФУНКЦИИ Вспомогательные__________________________________________________
     function user() {
       const db = new dbClass()
-      return db.query( 'SELECT * FROM userList', [] )
+      return db.query('SELECT * FROM userList', [])
     }
 
     function addNewUser(newUserArr) {
       const db = new dbClass()
-      return db.query( "INSERT INTO userList (status,name, login, password,salt) VALUES (?, ?, ?, ?, ?)"  , [ newUserArr.status, newUserArr.name, newUserArr.login,newUserArr.password,newUserArr.salt] )
+      return db.query("INSERT INTO userList (status,name, login, password,salt) VALUES (?, ?, ?, ?, ?)", [newUserArr.status, newUserArr.name, newUserArr.login, newUserArr.password, newUserArr.salt])
     }
 
     function deleteUser(uniqueUserId) {
       const db = new dbClass()
-      return db.query( "DELETE FROM userList where id = ? "  , [uniqueUserId] )
+      return db.query("DELETE FROM userList where id = ? ", [uniqueUserId])
     }
 
     function userLoginAuth(userLogin) {
       const db = new dbClass()
-      return db.query( "SELECT * FROM userList WHERE login = ? "  , [userLogin] )
+      return db.query("SELECT * FROM userList WHERE login = ? ", [userLogin])
+        .then(user => {
+          if(user.length>0) return user[0]
+          return null
+        })
     }
 
-    function changePasswordUser(id,hash,salt) {
-      console.log(id,'',hash,'',salt)
+    function changePasswordUser(id, hash, salt) {
       const db = new dbClass()
-      return db.query( "UPDATE userList SET password=?,salt=? WHERE id=? "  , [hash,salt,id] )
+      return db.query("UPDATE userList SET password=?,salt=? WHERE id=? ", [hash, salt, id])
     };
 
 
     function searchById(id) {
       const db = new dbClass()
-      return db.query( "SELECT * FROM userList WHERE id = ? "  , [id] )
+      return db.query("SELECT * FROM userList WHERE id = ? ", [id])
     };
 
 
@@ -72,7 +74,6 @@
       let hashUserPsw = hash.digest('hex');
       return hashUserPsw;
     }
-
     //ФУНКЦИИ КОТОРЫМ НЕ НУЖЕН ТОКЕН ДЛЯ ВЫПОЛНЕНИЯ_________________________________
     app.post('/ajax/users/dataChecking', function(req, res, next) {
 
@@ -80,30 +81,29 @@
       let userPassword = req.body.password; //password пользователя
 
       userLoginAuth(userLogin).then(user => {
+        if(user){
         let checkUser = user //проверим есть ли такой пользоваль
-        let salt = checkUser[0].salt
+        let salt = checkUser.salt
         let result = hashUser(userPassword, salt)
 
-        if (checkUser && checkUser[0].password === result) {
+        if (checkUser && checkUser.password === result) {
           let token = jwt.sign({
-            id: user[0].id,
-            login: user[0].login
+            id: user.id,
+            login: user.login
           }, MY_SECRET); //хешируем токен используя секретный ключ
 
           res.json({
             token: token, // захешированный токен
-            id: user[0].id,
-            name: user[0].name,
-            login: user[0].login,
-            status: user[0].status
+            id: user.id,
+            name: user.name,
+            login: user.login,
+            status: user.status
           })
-
+          }
         } else {
-          return next(createError(400, 'Вы ввели неправильные логин или пароль'))
+          return next(createError(402, 'Вы ввели неправильные логин или пароль'))
         }
-
       })
-
     })
 
 //ОБРАБОТЧИК ПЕРЕХВАТЫВАЕТ ВСЕ ПУТИ_____________________________________________
@@ -147,7 +147,7 @@ app.post('/ajax/users/addUser', function(req, res, next) {
     let userPassword = req.body.password; //password пользователя
     let status = req.body.status
     if (status) {status="Admin"}
-    else status = "User"
+    else {status = "User"}
 
     const saltRounds = 10;
     let salt = bcrypt.genSaltSync(saltRounds);
@@ -194,14 +194,11 @@ app.post('/ajax/users/changePassword', function(req, res, next) {
 
   searchById(userId).then(currentUser => {
     if(firstInput===secondInput && firstInput!='' && secondInput!='')  {
-      let newPsw = firstInput
-
       const saltRounds = 10;
       let salt = bcrypt.genSaltSync(saltRounds);
 
       let hashResult = hashUser(currentUser[0].password,salt)
       changePasswordUser(userId,hashResult,salt)
-
     }
   res.json({
     success: 1
@@ -217,11 +214,9 @@ app.get('/ajax/users/fileTable', function(req, res) {
   let domainArr = []
   let domenIpObj = [] // массив для хранения обьектов
 
-
   for (let i = 0; i < files.length; i++) //убираем расширение
   {
     let str = (fs.readFileSync(directory + files[i], 'utf8'));
-
     regexp = /[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}.[0-9]{1,3}/g
     let ip = str.match(regexp) || ['###IP Не указан###']
 
@@ -235,7 +230,6 @@ app.get('/ajax/users/fileTable', function(req, res) {
       domain: domainArr[i]
     }
   }
-
   filesList = domenIpObj
   res.json({
     domenIpObj
@@ -274,9 +268,10 @@ app.post('/ajax/users/deleteFiles', function(req, res) { //  удаления ф
 //_______________FILTER________________________________________
 
 app.post('/ajax/users/tableUserSearch', function(req, res) { //  удаления файла из текущей директории
+    user().then(userList=>{
      let newSearchList=[]
      let searchResult = req.body.filterInput.toLowerCase();
-
+     console.log(searchResult)
      newSearchList = userList.filter(function(elem) {
        if (
            elem.login.toLowerCase().indexOf(searchResult) != -1 ||
@@ -288,11 +283,11 @@ app.post('/ajax/users/tableUserSearch', function(req, res) { //  удалени�
          return false;
        }
      });
-
-
+     console.log(newSearchList)
     res.json({
       newSearchList
     })
+  })
 });
 
 app.post('/ajax/users/tableFilesSearch', function(req, res) { //  удаления файла из текущей директории
