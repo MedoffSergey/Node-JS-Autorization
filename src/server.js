@@ -84,36 +84,37 @@
     }
     //ФУНКЦИИ КОТОРЫМ НЕ НУЖЕН ТОКЕН ДЛЯ ВЫПОЛНЕНИЯ_________________________________
     app.post('/ajax/users/dataChecking', function(req, res, next) {
-
       let userLogin = req.body.login; //name пользователя
       let userPassword = req.body.password; //password пользователя
 
       userLoginAuth(userLogin).then(user => {
-        if(user){
-        let checkUser = user //проверим есть ли такой пользоваль
-        let salt = checkUser.salt
-        let result = hashUser(userPassword, salt)
+        if (user) {
+          let checkUser = user //проверим есть ли такой пользоваль
+          let salt = checkUser.salt
+          let result = hashUser(userPassword, salt)
 
-        if (checkUser && checkUser.password === result) {
-          let token = jwt.sign({
-            id: user.id,
-            login: user.login
-          }, MY_SECRET); //хешируем токен используя секретный ключ
+          if (checkUser && checkUser.password === result) {
+            let token = jwt.sign({
+              id: user.id,
+              login: user.login
+            }, MY_SECRET); //хешируем токен используя секретный ключ
 
-          res.json({
-            token: token, // захешированный токен
-            id: user.id,
-            name: user.name,
-            login: user.login,
-            status: user.status
-          })
+            res.json({
+              token: token, // захешированный токен
+              id: user.id,
+              name: user.name,
+              login: user.login,
+              status: user.status
+            })
+          } else {
+            return next(createError(402, 'Вы ввели неправильные логин или пароль'))
           }
+
         } else {
           return next(createError(402, 'Вы ввели неправильные логин или пароль'))
         }
       })
     })
-
 //ОБРАБОТЧИК ПЕРЕХВАТЫВАЕТ ВСЕ ПУТИ_____________________________________________
 
 app.use('*', function(req, res, next) {
@@ -159,8 +160,7 @@ app.post('/ajax/users/addUser', function(req, res, next) {
   if (status) { status = "Admin"}
   else {status = "User" }
 
-  const saltRounds = 10;
-  let salt = bcrypt.genSaltSync(saltRounds);
+  let salt = bcrypt.genSaltSync(10);
   let result = hashUser(userPassword, salt)
 
   if (userName != '' && userLogin != '' && userPassword != '') {
@@ -176,8 +176,11 @@ app.post('/ajax/users/addUser', function(req, res, next) {
         currentUser
       });
     })
+    .catch((error)=> {
+        next(error)
+      });
   } else {
-    return next(createError(400, 'Логин уже сушествует'))
+    return next(createError(400, 'Вы не заполнили в полях данные'))
   }
 
 });
@@ -203,9 +206,7 @@ app.post('/ajax/users/changePassword', function(req, res, next) {
 
   searchById(userId).then(currentUser => {
     if (firstInput === secondInput && firstInput != '' && secondInput != '') {
-      const saltRounds = 10;
-      let salt = bcrypt.genSaltSync(saltRounds);
-
+      let salt = bcrypt.genSaltSync(10);
       let hashResult = hashUser(currentUser.password, salt)
       changePasswordUser(userId, hashResult, salt)
     }
@@ -325,12 +326,22 @@ app.use(function(req, res, next) { //ОТЛАВЛИВАЕМ ВСЕ НЕ СУЩЕ
 })
 
 app.use(function(err, req, res, next) { //ВЫВЕДЕМ В NETWORK ОТФАРМАТИРОВАННОЕ СООЬЩЕНИЕ ОБ ОШИБКЕ
+  const code = err.statusCode || 500
   res.status(err.statusCode || 500)
-  res.json({
-    success: 0,
-    error: err,
-    message: err.message
-  })
+
+  if(code==500){
+    res.json({
+      success: 0,
+      error: err,
+      message: "Произошла ошибка на серевере , попробуйте позже"
+    })
+  }else{
+    res.json({
+      success: 0,
+      error: err,
+      message: err.message
+    })
+  }
 })
 
 //запускаем сервер
