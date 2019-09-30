@@ -14,7 +14,7 @@
   const mysql = require('mysql2');
   const cfg   = require( './dbConfig' );
   const dbClass = require ('./db.js')
-
+  const async = require("async");
 
   app.set('views', path.join(__dirname, 'views')); //указываем путь к pug файлам
   app.set('view engine', 'pug'); // указываем используемый шаблонизатор HTML кода
@@ -273,6 +273,21 @@ app.post('/ajax/users/deleteFiles', function(req, res) { //  удаления ф
     success: 1
   })
 });
+
+
+app.post('/ajax/users/directoryContent', function(req, res) { //  удаления файла из текущей директории
+   let directory = req.body.directory; //name пользователя
+   fs.readdir(directory, function(err, items) {
+   for (var i=0; i<items.length; i++) {
+       console.log(items[i]);
+   }
+ });
+   console.log('fileContent',fileContent)
+ res.json({
+   success: 1
+ })
+});
+
 //_______________FILTER________________________________________
 
 app.post('/ajax/users/tableUserSearch', function(req, res) { //  удаления файла из текущей директории
