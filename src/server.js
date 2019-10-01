@@ -171,9 +171,9 @@ app.post('/ajax/users/addUser', function(req, res, next) {
       password: result,
       salt: salt
     }
-    addNewUser(newUserArr).then(currentUser => {
+    addNewUser(newUserArr).then(() => {
       res.json({
-        currentUser
+        succes: 1
       });
     })
     .catch((error)=> {
