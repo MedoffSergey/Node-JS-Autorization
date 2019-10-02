@@ -239,11 +239,11 @@ app.get('/ajax/users/fileTable', function(req, res) {
       domain: domainArr[i]
     }
   }
-  filesList = domenIpObj
   res.json({
-    domenIpObj
+    domenIpObj // НЕ ДОЛЖНЫ БЫТЬ ПАПКИ
   })
 })
+
 
 app.post('/ajax/users/addFiles', function(req, res) { //добавление
   let domain = req.body.domain;
@@ -275,19 +275,55 @@ app.post('/ajax/users/deleteFiles', function(req, res) { //  удаления ф
 });
 
 
-app.post('/ajax/users/directoryContent', function(req, res) { //  удаления файла из текущей директории
-   let directory = req.body.directory; //name пользователя
-   fs.readdir(directory, function(err, items) {
-   for (var i=0; i<items.length; i++) {
-       console.log(items[i]);
-   }
- });
-   console.log('fileContent',fileContent)
- res.json({
-   success: 1
- })
-});
+function filesInDirectory(filesInDirectory) {
+  let filesArr = []     //массив для хранения txt файлов
+  let folderArr = []  //массив для хранения папок
 
+  for (let i = 0; i < filesInDirectory.length; i++) {
+    if (filesInDirectory[i].substr(-4, 4) === '.txt') filesArr.push(filesInDirectory[i])
+    else folderArr.push(filesInDirectory[i])
+  }
+  return {
+    filesArr,
+    folderArr
+  }
+}
+
+function dataInFolders(folderArr, directory) {
+  let filesCurrentDirectory = {}
+  let allSum=0
+  for (let i = 0; i < folderArr.length; i++) {
+    filesCurrentDirectory[i] = fs.readdirSync(directory + folderArr[i]); //Прочитываем файлы из текущей директории
+    let filesOrFolder = filesInDirectory(filesCurrentDirectory[i])
+
+
+    if(filesOrFolder.folderArr) dataInFolders(filesOrFolder.folderArr,directory+folderArr[i]+'/')
+    else return
+    allSum += sum(filesOrFolder.filesArr,directory+folderArr[i]+'/')
+  }
+  console.log(allSum)
+}
+
+function sum(filesArr, directory) {//вычисление суммы значений в файлах
+  let sum = 0;
+  for (let i = 0; i < filesArr.length; i++) {
+    let str = fs.readFileSync(directory + filesArr[i], 'utf8') //прочитываем что находиться в текущем файле
+    sum += Number(str);
+  }
+
+  return sum
+}
+
+app.post('/ajax/users/directoryContent', function(req, res) { //  удаления файла из текущей директории
+  let directory = req.body.directory; //Получаем от пользователя Директорию
+
+  let filesCurrentDirectory = fs.readdirSync(directory); //Прочитываем файлы из текущей директории
+  let filesOrFolder = filesInDirectory(filesCurrentDirectory) // разбиваем все файлы из дирректории на  файлы и папки
+  let sumCount = sum(filesOrFolder.filesArr, directory) // посчитаем сумму
+  dataInFolders(filesOrFolder.folderArr, directory) //заходим внутрь папок
+  console.log("\n Файлы в исходой папке: ",filesOrFolder)
+  console.log("Сумма в исходой папке: ",sumCount)
+})
 //_______________FILTER________________________________________
 
 app.post('/ajax/users/tableUserSearch', function(req, res) { //  удаления файла из текущей директории
